@@ -123,6 +123,34 @@ RSpec.describe Availability::CalendarParser do
       end
     end
 
+    context 'with a timed event that omits its end and duration' do
+      let(:range_start) { Time.utc(2026, 8, 25) }
+      let(:range_end) { Time.utc(2026, 8, 30) }
+      let(:ics) do
+        <<~ICS
+          BEGIN:VCALENDAR
+          VERSION:2.0
+          PRODID:-//Test//EN
+          BEGIN:VEVENT
+          UID:instant-event
+          DTSTART:20260827T120000Z
+          END:VEVENT
+          BEGIN:VEVENT
+          UID:ordinary-event
+          DTSTART:20260827T130000Z
+          DTEND:20260827T140000Z
+          END:VEVENT
+          END:VCALENDAR
+        ICS
+      end
+
+      it 'ignores the zero-duration event' do
+        expected_period = [Time.utc(2026, 8, 27, 13), Time.utc(2026, 8, 27, 14)]
+
+        expect(periods.map { |item| [item.starts_at, item.ends_at] }).to eq([expected_period])
+      end
+    end
+
     context 'with a moved detached recurrence' do
       let(:ics) do
         <<~ICS
@@ -187,6 +215,26 @@ RSpec.describe Availability::CalendarParser do
           UID:invalid-duration
           DTSTART:20260323T100000Z
           DTEND:20260323T090000Z
+          END:VEVENT
+          END:VCALENDAR
+        ICS
+      end
+
+      it 'fails closed' do
+        expect { periods }.to raise_error(Availability::ParseError, /Calendar 1/)
+      end
+    end
+
+    context 'with an event whose explicit end equals its start' do
+      let(:ics) do
+        <<~ICS
+          BEGIN:VCALENDAR
+          VERSION:2.0
+          PRODID:-//Test//EN
+          BEGIN:VEVENT
+          UID:invalid-zero-duration
+          DTSTART:20260323T100000Z
+          DTEND:20260323T100000Z
           END:VEVENT
           END:VCALENDAR
         ICS

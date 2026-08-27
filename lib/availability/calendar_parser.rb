@@ -38,7 +38,7 @@ module Availability
       return if cancelled?(event)
 
       raise InvalidEventError, 'event is missing DTSTART' unless event.dtstart
-      return if all_day?(event) && !event.dtend && !event.duration
+      return unless event.dtend || event.duration
 
       starts_at = event.schedule.start_time
       ends_at = event.schedule.end_time
@@ -46,7 +46,7 @@ module Availability
     end
 
     def busy_periods(events, override_keys, range_start, range_end)
-      events.reject { |event| cancelled?(event) }.flat_map do |event|
+      events.reject { |event| cancelled?(event) || implicit_instant?(event) }.flat_map do |event|
         event_periods(event, override_keys, range_start, range_end)
       end
     end
@@ -100,6 +100,10 @@ module Availability
 
     def floating?(event)
       event.dtstart.ical_params['tzid'].nil?
+    end
+
+    def implicit_instant?(event)
+      !all_day?(event) && !event.dtend && !event.duration
     end
 
     def floating_time_to_utc(time)
