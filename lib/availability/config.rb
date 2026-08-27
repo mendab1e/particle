@@ -5,6 +5,8 @@ require 'uri'
 require 'yaml'
 require 'tzinfo'
 
+require_relative 'calendar_url'
+
 module Availability
   # Loads, normalizes, and validates generator configuration.
   class Config
@@ -130,14 +132,15 @@ module Availability
     end
 
     def validate_url(value, label)
-      uri = URI.parse(value)
+      normalized = CalendarUrl.normalize(value)
+      uri = URI.parse(normalized)
       unless uri.is_a?(URI::HTTP) && uri.host && %w[http https].include?(uri.scheme)
-        raise ConfigError, "#{label} must be an HTTP(S) URL"
+        raise ConfigError, "#{label} must be an HTTP(S) or webcal URL"
       end
 
-      value
+      normalized
     rescue URI::InvalidURIError
-      raise ConfigError, "#{label} must be a valid HTTP(S) URL"
+      raise ConfigError, "#{label} must be a valid HTTP(S) or webcal URL"
     end
 
     def parse_availability

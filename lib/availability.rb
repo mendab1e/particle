@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative 'availability/errors'
+require_relative 'availability/calendar_url'
 require_relative 'availability/config'
 require_relative 'availability/calendar_fetcher'
 require_relative 'availability/busy_period'

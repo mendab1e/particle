@@ -51,6 +51,16 @@ RSpec.describe Availability::Config do
       end
     end
 
+    context 'with a webcal calendar URL' do
+      let(:attributes) do
+        config_attributes('calendar_urls' => ['webcal://example.test/private.ics?token=hidden'])
+      end
+
+      it 'normalizes it to HTTPS' do
+        expect(config.calendar_urls).to eq(['https://example.test/private.ics?token=hidden'])
+      end
+    end
+
     context 'when generation is disabled without calendar URLs' do
       let(:attributes) do
         config_attributes('enabled' => false, 'calendar_urls' => [])

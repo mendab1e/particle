@@ -4,6 +4,8 @@ require 'net/http'
 require 'openssl'
 require 'uri'
 
+require_relative 'calendar_url'
+
 module Availability
   # Downloads private calendar feeds with bounded redirects, timeouts, and size.
   class CalendarFetcher
@@ -16,7 +18,7 @@ module Availability
     end
 
     def fetch(url, label: 'Calendar', redirects_left: MAX_REDIRECTS)
-      uri = URI.parse(url)
+      uri = URI.parse(CalendarUrl.normalize(url))
       validate_uri!(uri, label)
       response, body = request(uri, label)
       handle_response(response, body, uri, label, redirects_left)

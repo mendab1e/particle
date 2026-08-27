@@ -23,6 +23,19 @@ RSpec.describe Availability::CalendarFetcher do
       end
     end
 
+    context 'with a webcal URL' do
+      let(:url) { 'webcal://calendar.test/feed.ics?token=private' }
+
+      before do
+        stub_request(:get, 'https://calendar.test/feed.ics?token=private')
+          .to_return(status: 200, body: 'calendar body')
+      end
+
+      it 'downloads it over HTTPS' do
+        expect(fetch_calendar).to eq('calendar body')
+      end
+    end
+
     context 'when the endpoint returns an error' do
       let(:url) { 'https://calendar.test/feed.ics?secret=do-not-log' }
       let(:label) { 'Calendar 2' }

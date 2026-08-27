@@ -79,7 +79,7 @@ availability:
 
 ### Calendar feeds and secrets
 
-`calendar_urls` accepts HTTPS or HTTP subscription URLs. Every feed contributes busy time with OR semantics: if any calendar is busy, the shared view is busy. Overlapping and adjacent periods are merged before subtraction.
+`calendar_urls` accepts HTTPS, HTTP, or `webcal://` subscription URLs. Webcal URLs are downloaded over HTTPS. Every feed contributes busy time with OR semantics: if any calendar is busy, the shared view is busy. Overlapping and adjacent periods are merged before subtraction.
 
 A URL may be literal, or an exact `${UPPERCASE_ENV_NAME}` placeholder. No ERB is evaluated, so the YAML file cannot execute Ruby code.
 
