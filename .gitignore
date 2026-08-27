@@ -1,0 +1,6 @@
+/config/availability.yml
+/log/*.log
+/tmp/
+/vendor/bundle/
+/.bundle/
+

@@ -1,0 +1,36 @@
+plugins:
+  - rubocop-performance
+  - rubocop-rake
+  - rubocop-rspec
+
+AllCops:
+  TargetRubyVersion: 3.4
+  NewCops: enable
+  SuggestExtensions: false
+  CacheRootDirectory: "tmp/rubocop_cache"
+  Exclude:
+    - "vendor/**/*"
+    - "public/**/*"
+    - "tmp/**/*"
+    - "log/**/*"
+
+Metrics/BlockLength:
+  Exclude:
+    - "spec/**/*"
+    - "Rakefile"
+
+Metrics/ClassLength:
+  Max: 150
+
+Metrics/ParameterLists:
+  CountKeywordArgs: false
+
+Naming/PredicateMethod:
+  AllowedMethods:
+    - run
+
+RSpec/ExampleLength:
+  Max: 10
+
+RSpec/MultipleMemoizedHelpers:
+  Max: 10

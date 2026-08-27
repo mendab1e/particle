@@ -1,0 +1,16 @@
+enabled: true
+timezone: Europe/Berlin
+calendar_urls:
+  - https://fixture.invalid/private.ics?token=fixture-only-secret
+days_to_show: 28
+minimum_slot_minutes: 60
+event_buffer:
+  before_minutes: 0
+  after_minutes: 0
+availability:
+  default:
+    - start: "09:00"
+      end: "22:00"
+  sunday:
+    - start: "10:00"
+      end: "18:00"

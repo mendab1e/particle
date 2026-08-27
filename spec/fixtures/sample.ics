@@ -1,0 +1,19 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Availability Test Fixture//EN
+BEGIN:VEVENT
+UID:fixture-event-id@example.test
+DTSTART;TZID=Europe/Berlin:20260826T100000
+DTEND;TZID=Europe/Berlin:20260826T113000
+SUMMARY:Private strategy meeting
+DESCRIPTION:Notes mentioning secret-attendee@example.test
+LOCATION:https://meet.example.test/never-publish
+END:VEVENT
+BEGIN:VEVENT
+UID:fixture-recurring-id@example.test
+DTSTART;TZID=Europe/Berlin:20260827T160000
+DTEND;TZID=Europe/Berlin:20260827T170000
+RRULE:FREQ=WEEKLY;COUNT=4
+SUMMARY:Another secret
+END:VEVENT
+END:VCALENDAR

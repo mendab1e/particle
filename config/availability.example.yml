@@ -1,0 +1,28 @@
+enabled: true
+timezone: Europe/Berlin
+
+# Use literal private URLs locally, or exact environment placeholders in production.
+calendar_urls:
+  - "${CALENDAR_MAIN_URL}"
+  - "${CALENDAR_EXTRA_URL}"
+
+days_to_show: 28
+minimum_slot_minutes: 60
+
+event_buffer:
+  before_minutes: 0
+  after_minutes: 0
+
+availability:
+  default:
+    - start: "09:00"
+      end: "13:00"
+    - start: "14:00"
+      end: "22:00"
+
+  sunday:
+    - start: "10:00"
+      end: "18:00"
+
+  # monday:
+  #   unavailable: true

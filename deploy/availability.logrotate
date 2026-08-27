@@ -1,0 +1,9 @@
+/opt/availability/log/generator.log {
+    weekly
+    rotate 8
+    compress
+    missingok
+    notifempty
+    copytruncate
+}
+

@@ -1,0 +1,33 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require 'optparse'
+
+$LOAD_PATH.unshift(File.expand_path('../lib', __dir__))
+require 'availability'
+
+project_root = File.expand_path('..', __dir__)
+options = {
+  config: ENV.fetch('AVAILABILITY_CONFIG', File.join(project_root, 'config', 'availability.yml')),
+  output: File.join(project_root, 'public')
+}
+
+OptionParser.new do |parser|
+  parser.banner = 'Usage: bundle exec bin/generate [options]'
+  parser.on('-c', '--config PATH', 'Configuration file (or AVAILABILITY_CONFIG)') { |path| options[:config] = path }
+  parser.on('-o', '--output DIR', 'Static output directory') { |path| options[:output] = path }
+end.parse!
+
+begin
+  Availability::Application.new(
+    config_path: options[:config],
+    output_dir: options[:output],
+    template_path: File.join(project_root, 'templates', 'index.html.erb')
+  ).run
+rescue Availability::Error => e
+  warn "Generation failed: #{e.message}"
+  exit 1
+rescue StandardError => e
+  warn "Generation failed unexpectedly (#{e.class}). The previous site was not replaced."
+  exit 1
+end
