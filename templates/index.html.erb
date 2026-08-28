@@ -9,14 +9,17 @@
   <style>
     :root {
       color-scheme: light dark;
-      --background: #f4f4f1;
+      --background: #f3f6fb;
       --surface: #ffffff;
-      --text: #242522;
-      --muted: #73756f;
-      --border: #dedfd9;
-      --accent: #1f6b4f;
-      --accent-soft: #e2f2eb;
-      --empty: #a3a59f;
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: #dbe2ea;
+      --accent: #16835f;
+      --accent-strong: #166534;
+      --accent-soft: #e8f7f1;
+      --accent-glow: rgb(22 131 95 / 0.13);
+      --empty: #94a3b8;
+      --shadow: 0 1px 2px rgb(15 23 42 / 0.04), 0 8px 24px rgb(15 23 42 / 0.04);
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
 
@@ -24,7 +27,7 @@
 
     body {
       margin: 0;
-      background: var(--background);
+      background: radial-gradient(circle at 8% 0%, var(--accent-glow), transparent 28rem), var(--background);
       color: var(--text);
       line-height: 1.45;
     }
@@ -45,6 +48,8 @@
       line-height: 1;
     }
 
+    h1::after { content: "."; color: var(--accent); }
+
     .intro {
       max-width: 38rem;
       margin: 0.85rem 0 0;
@@ -52,14 +57,21 @@
       font-size: 1.05rem;
     }
 
-    .week + .week { margin-top: 2rem; }
+    .week + .week { margin-top: 0.65rem; }
 
-    .week-title {
-      margin: 0 0 0.65rem;
+    .weekday-header {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 0.65rem;
+      margin-bottom: 0.55rem;
+    }
+
+    .weekday-header span {
+      padding: 0 1rem;
       color: var(--muted);
-      font-size: 0.75rem;
-      font-weight: 700;
-      letter-spacing: 0.09em;
+      font-size: 0.7rem;
+      font-weight: 650;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
     }
 
@@ -75,13 +87,16 @@
       border: 1px solid var(--border);
       border-radius: 0.85rem;
       background: var(--surface);
+      box-shadow: var(--shadow);
+      transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
     }
 
+    .day.placeholder { visibility: hidden; }
     .day.empty { color: var(--empty); }
 
     .day.today {
       border-color: var(--accent);
-      box-shadow: 0 0 0 1px var(--accent);
+      box-shadow: 0 0 0 1px var(--accent), 0 12px 28px var(--accent-glow);
     }
 
     .date {
@@ -113,7 +128,7 @@
       padding: 0.42rem 0.55rem;
       border-radius: 0.45rem;
       background: var(--accent-soft);
-      color: var(--accent);
+      color: var(--accent-strong);
       font-size: 0.84rem;
       font-variant-numeric: tabular-nums;
       font-weight: 700;
@@ -131,6 +146,7 @@
       border: 1px solid var(--border);
       border-radius: 0.85rem;
       background: var(--surface);
+      box-shadow: var(--shadow);
     }
 
     .disabled h2 { margin: 0 0 0.35rem; font-size: 1.1rem; }
@@ -144,9 +160,20 @@
       font-size: 0.8rem;
     }
 
+    @media (hover: hover) {
+      .day:not(.placeholder):hover {
+        border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+        box-shadow: 0 10px 28px rgb(15 23 42 / 0.09);
+        transform: translateY(-2px);
+      }
+    }
+
     @media (max-width: 58rem) {
       main { padding-top: 2.25rem; }
+      .weekday-header { display: none; }
+      .week + .week { margin-top: 0.5rem; }
       .days { grid-template-columns: 1fr; gap: 0.5rem; }
+      .day.placeholder { display: none; }
       .day {
         display: grid;
         grid-template-columns: minmax(8.5rem, 0.7fr) 1.3fr;
@@ -159,15 +186,22 @@
 
     @media (prefers-color-scheme: dark) {
       :root {
-        --background: #171916;
-        --surface: #20231f;
-        --text: #f1f2ed;
-        --muted: #a6aaa2;
-        --border: #3a3e38;
-        --accent: #80d4ad;
-        --accent-soft: #193e2d;
-        --empty: #777b74;
+        --background: #0f172a;
+        --surface: #111827;
+        --text: #f8fafc;
+        --muted: #94a3b8;
+        --border: #334155;
+        --accent: #4ade80;
+        --accent-strong: #86efac;
+        --accent-soft: #052e24;
+        --accent-glow: rgb(74 222 128 / 0.14);
+        --empty: #64748b;
+        --shadow: 0 1px 2px rgb(0 0 0 / 0.2), 0 10px 28px rgb(0 0 0 / 0.16);
       }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .day { transition: none; }
     }
   </style>
 </head>
@@ -175,40 +209,49 @@
   <main>
     <header>
       <h1>Particle</h1>
-      <p class="intro">From Party Cal: shared availability <%= h period_description %>.</p>
+      <p class="intro">Party Cal: availability <%= h period_description %></p>
     </header>
 
     <% if enabled -%>
-      <% days.each_slice(7).with_index(1) do |week, index| -%>
-        <section class="week" aria-labelledby="week-<%= index %>">
-          <h2 class="week-title" id="week-<%= index %>">Week <%= index %></h2>
-          <div class="days">
-            <% week.each do |day| -%>
-              <article class="day<%= " empty" if day.slots.empty? %><%= " today" if day.date == today %>">
-                <h3 class="date">
-                  <%= h format_date(day.date) %>
-                  <% if day.date == today -%><span class="today-label">Today</span><% end -%>
-                </h3>
-                <% if day.slots.empty? -%>
-                  <p class="none">No availability</p>
-                <% else -%>
-                  <ul class="slots" aria-label="Available times">
-                    <% day.slots.each do |slot| -%>
-                      <li class="slot"><%= h format_time(slot.starts_at) %>–<%= h format_time(slot.ends_at) %></li>
+      <div class="calendar">
+        <div class="weekday-header" aria-hidden="true">
+          <% weekdays.each do |weekday| -%><span><%= h weekday[0, 3] %></span><% end -%>
+        </div>
+        <% weeks.each_with_index do |week, index| -%>
+          <section class="week" aria-label="Week <%= index + 1 %>">
+            <div class="days">
+              <% week.each_with_index do |day, weekday_index| -%>
+                <% if day -%>
+                  <article class="day<%= " empty" if day.slots.empty? %><%= " today" if day.date == today %>"
+                           data-weekday="<%= h weekdays[weekday_index] %>">
+                    <h3 class="date">
+                      <%= h format_date(day.date) %>
+                      <% if day.date == today -%><span class="today-label">Today</span><% end -%>
+                    </h3>
+                    <% if day.slots.empty? -%>
+                      <p class="none">No availability</p>
+                    <% else -%>
+                      <ul class="slots" aria-label="Available times">
+                        <% day.slots.each do |slot| -%>
+                          <li class="slot"><%= h format_time(slot.starts_at) %>–<%= h format_time(slot.ends_at) %></li>
+                        <% end -%>
+                      </ul>
                     <% end -%>
-                  </ul>
+                  </article>
+                <% else -%>
+                  <div class="day placeholder" data-weekday="<%= h weekdays[weekday_index] %>" aria-hidden="true"></div>
                 <% end -%>
-              </article>
-            <% end -%>
-          </div>
-        </section>
-      <% end -%>
-    <% else -%>
+              <% end -%>
+            </div>
+          </section>
+        <% end -%>
+      </div>
+<% else -%>
       <section class="disabled">
         <h2>Calendar not available</h2>
         <p>Particle is not being shared at the moment.</p>
       </section>
-    <% end -%>
+<% end -%>
 
     <footer>Particle · from Party Cal · last updated: <%= h updated_at %></footer>
   </main>

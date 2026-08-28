@@ -120,6 +120,18 @@ RSpec.describe Availability::AvailabilityCalculator do
       end
     end
 
+    context 'with availability ending at midnight' do
+      let(:config) do
+        build_config('availability' => {
+                       'default' => [{ 'start' => '09:00', 'end' => '00:00' }]
+                     })
+      end
+
+      it 'uses midnight at the start of the next day' do
+        expect(slot_times(calculated_days.first)).to eq([['09:00', '00:00']])
+      end
+    end
+
     context 'when crossing the Europe/Berlin spring DST transition' do
       let(:start_date) { Date.new(2026, 3, 29) }
       let(:config) do

@@ -63,8 +63,16 @@ RSpec.describe Availability::Application do
         expect(html).to include(
           '09:00–10:00',
           '11:30–22:00',
-          'during the next 2 days'
+          'Party Cal: availability during the next 2 days'
         )
+      end
+
+      it 'renders Monday-first calendar rows with rounded green card styling', :aggregate_failures do
+        html = File.read(paths.fetch(:index))
+
+        expect(html.index('data-weekday="monday"')).to be < html.index('Wednesday, 26 August')
+        expect(html).to include('--accent: #16835f')
+        expect(html).to include('border-radius: 0.85rem')
       end
 
       it 'does not expose calendar metadata' do

@@ -26,7 +26,9 @@ module Availability
 
     # Exposes only display-safe availability values and formatting helpers to ERB.
     class View
-      attr_reader :days, :enabled, :today
+      WEEKDAYS = %w[monday tuesday wednesday thursday friday saturday sunday].freeze
+
+      attr_reader :enabled, :today
 
       def initialize(days:, generated_at:, timezone:, enabled:, today:, days_to_show:)
         @days = days
@@ -51,6 +53,18 @@ module Availability
 
       def format_time(time)
         @timezone.to_local(time.utc).strftime('%H:%M')
+      end
+
+      def weeks
+        return [] if @days.empty?
+
+        padded_days = Array.new(@days.first.date.cwday - 1) + @days
+        padded_days.concat(Array.new((7 - padded_days.length) % 7))
+        padded_days.each_slice(7).to_a
+      end
+
+      def weekdays
+        WEEKDAYS
       end
 
       def updated_at

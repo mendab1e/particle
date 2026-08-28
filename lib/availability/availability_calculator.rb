@@ -40,8 +40,10 @@ module Availability
 
     def window_boundaries(date, window)
       window.map do |minutes|
-        hour, minute = minutes.divmod(60)
-        @config.timezone.local_time(date.year, date.month, date.day, hour, minute, 0).utc
+        day_offset, minutes_within_day = minutes.divmod(24 * 60)
+        hour, minute = minutes_within_day.divmod(60)
+        boundary_date = date + day_offset
+        @config.timezone.local_time(boundary_date.year, boundary_date.month, boundary_date.day, hour, minute, 0).utc
       end
     rescue TZInfo::PeriodNotFound, TZInfo::AmbiguousTime => e
       raise Error, "availability boundary is invalid on #{date} because of daylight saving time (#{e.class})"

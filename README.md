@@ -67,7 +67,7 @@ availability:
     - start: "09:00"
       end: "13:00"
     - start: "14:00"
-      end: "22:00"
+      end: "00:00"
 
   sunday:
     - start: "10:00"
@@ -109,10 +109,10 @@ availability:
     - start: "09:00"
       end: "13:00"
     - start: "14:00"
-      end: "22:00"
+      end: "00:00"
 ```
 
-The 13:00–14:00 gap is intentionally unavailable. Windows may touch but cannot overlap, and each start must be earlier than its end. Overnight availability windows are deliberately not accepted; express availability on each calendar day separately.
+The 13:00–14:00 gap is intentionally unavailable. `00:00` is accepted as a window end and means midnight at the end of that calendar day, matching calendar UI conventions. Windows may touch but cannot overlap, and each start must be earlier than its end. Other overnight availability windows are deliberately not accepted; express availability on each calendar day separately.
 
 Any weekday can replace the default for that entire weekday: `monday`, `tuesday`, `wednesday`, `thursday`, `friday`, `saturday`, or `sunday`. An override is a replacement, not a merge with `default`.
 
@@ -120,7 +120,7 @@ Any weekday can replace the default for that entire weekday: `monday`, `tuesday`
 availability:
   default:
     - start: "09:00"
-      end: "22:00"
+      end: "00:00"
   sunday:
     - start: "10:00"
       end: "18:00"

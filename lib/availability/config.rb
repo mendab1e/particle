@@ -192,14 +192,15 @@ module Availability
       raise ConfigError, "#{key} has unknown key: #{unknown.first}" unless unknown.empty?
 
       starts = parse_time(window['start'], "#{key}.start")
-      ends = parse_time(window['end'], "#{key}.end")
+      ends = parse_time(window['end'], "#{key}.end", end_of_day: true)
       raise ConfigError, "#{key}.start must be earlier than #{key}.end" unless starts < ends
 
       [starts, ends].freeze
     end
 
-    def parse_time(value, key)
+    def parse_time(value, key, end_of_day: false)
       raise ConfigError, "#{key} must use HH:MM (24-hour time)" unless value.is_a?(String) && TIME_FORMAT.match?(value)
+      return 24 * 60 if end_of_day && value == '00:00'
 
       hour, minute = value.split(':').map(&:to_i)
       (hour * 60) + minute

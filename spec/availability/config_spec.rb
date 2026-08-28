@@ -106,6 +106,18 @@ RSpec.describe Availability::Config do
       end
     end
 
+    context 'with midnight as an availability window end' do
+      let(:attributes) do
+        config_attributes(
+          'availability' => { 'default' => { 'start' => '09:00', 'end' => '00:00' } }
+        )
+      end
+
+      it 'interprets midnight as the end of the calendar day' do
+        expect(config.windows_for(Date.new(2026, 8, 26))).to eq([[9 * 60, 24 * 60]])
+      end
+    end
+
     context 'with an unknown timezone' do
       let(:attributes) { config_attributes('timezone' => 'Mars/Olympus') }
 
