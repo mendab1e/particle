@@ -200,8 +200,8 @@ RSpec.describe Availability::CalendarParser do
         ICS
       end
 
-      it 'fails closed' do
-        expect { periods }.to raise_error(Availability::ParseError, /Calendar 1/)
+      it 'ignores the event' do
+        expect(periods).to be_empty
       end
     end
 
@@ -220,8 +220,8 @@ RSpec.describe Availability::CalendarParser do
         ICS
       end
 
-      it 'fails closed' do
-        expect { periods }.to raise_error(Availability::ParseError, /Calendar 1/)
+      it 'ignores the event' do
+        expect(periods).to be_empty
       end
     end
 
@@ -236,12 +236,19 @@ RSpec.describe Availability::CalendarParser do
           DTSTART:20260323T100000Z
           DTEND:20260323T100000Z
           END:VEVENT
+          BEGIN:VEVENT
+          UID:valid-after-invalid
+          DTSTART:20260323T110000Z
+          DTEND:20260323T120000Z
+          END:VEVENT
           END:VCALENDAR
         ICS
       end
 
-      it 'fails closed' do
-        expect { periods }.to raise_error(Availability::ParseError, /Calendar 1/)
+      it 'ignores the malformed event and retains valid events' do
+        expected_period = [Time.utc(2026, 3, 23, 11), Time.utc(2026, 3, 23, 12)]
+
+        expect(periods.map { |item| [item.starts_at, item.ends_at] }).to eq([expected_period])
       end
     end
   end

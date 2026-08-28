@@ -12,11 +12,9 @@ module Availability
     end
 
     def parse(ics, range_start:, range_end:, label: 'Calendar')
-      events = parse_events(ics, label)
+      events = parse_events(ics, label).select { |event| valid_event?(event) }
       override_keys = recurrence_override_keys(events)
       busy_periods(events, override_keys, range_start, range_end)
-    rescue InvalidEventError => e
-      raise ParseError, "#{label} could not be parsed: #{e.message}"
     rescue ParseError
       raise
     rescue StandardError => e
@@ -29,9 +27,15 @@ module Availability
       calendars = Icalendar::Calendar.parse(ics)
       raise ParseError, "#{label} did not contain a calendar" if calendars.empty?
 
-      events = calendars.flat_map(&:events)
-      events.each { |event| validate_event!(event) }
-      events
+      calendars.flat_map(&:events)
+    end
+
+    def valid_event?(event)
+      validate_event!(event)
+      value_to_utc(event.recurrence_id) if event.recurrence_id
+      true
+    rescue StandardError
+      false
     end
 
     def validate_event!(event)
@@ -58,6 +62,8 @@ module Availability
         period = occurrence_to_period(event, occurrence)
         period if period&.intersects?(range_start, range_end)
       end
+    rescue StandardError
+      []
     end
 
     def occurrences(event, range_start, range_end)

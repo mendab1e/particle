@@ -18,11 +18,11 @@ This is deliberately not a web application. Do not introduce Rails, a database, 
 
 Preserve these properties in every change:
 
-1. **Fail closed.** If any enabled calendar cannot be fetched, parsed, or safely interpreted, generation must fail rather than publish potentially false free time.
+1. **Fail on feed-level errors.** If any enabled calendar cannot be fetched or parsed as a calendar, generation must fail. Individual malformed events are ignored, accepting the risk of potentially false free time.
 2. **Keep the known-good page.** Prepare output before publishing and replace `public/index.html` atomically only after the complete run succeeds.
 3. **Never leak calendar data.** Generated HTML, robots files, logs, errors, comments, hidden attributes, and client-side data must never contain calendar URLs, ICS contents, event titles, descriptions, locations, attendees, UIDs, or source names.
 4. **Never fetch calendars in the browser.** Only the generator may contact private calendar endpoints.
-5. **Union all busy time.** An event in any configured calendar makes that period unavailable. Merge overlapping and adjacent busy intervals before subtraction.
+5. **Union all valid busy time.** Every safely interpreted event in any configured calendar makes that period unavailable. Merge overlapping and adjacent busy intervals before subtraction.
 6. **Use configured-zone wall time.** Normalize calculations through UTC while constructing and formatting boundaries in the configured IANA timezone. Preserve correct behavior across DST.
 7. **Apply configuration in this order.** Choose the weekday window replacement, apply event buffers, clip/merge busy intervals, subtract them, then discard slots shorter than `minimum_slot_minutes`.
 8. **Disabled means no feed access.** With `enabled: false`, do not resolve calendar secrets or perform network requests; render the unavailable page.
@@ -66,7 +66,7 @@ bin/generate
 
 ### Calendar domain
 
-- `lib/availability/calendar_parser.rb`: uses `icalendar` plus `icalendar-recurrence`/`ice_cube`; expands only the relevant range; handles UTC, named-zone, floating, all-day, multi-day, recurring, exclusion, cancellation, and detached recurrence events. Malformed non-cancelled events fail closed.
+- `lib/availability/calendar_parser.rb`: uses `icalendar` plus `icalendar-recurrence`/`ice_cube`; expands only the relevant range; handles UTC, named-zone, floating, all-day, multi-day, recurring, exclusion, cancellation, and detached recurrence events. Malformed individual events are ignored without exposing their contents.
 - `lib/availability/busy_period.rb`: defines UTC-backed `BusyPeriod`, `Slot`, and `DayAvailability` value objects.
 - `lib/availability/availability_calculator.rb`: applies buffers, builds per-day local boundaries, clips and merges busy periods, subtracts them from configured windows, and filters short slots.
 

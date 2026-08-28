@@ -1,6 +1,6 @@
 # Particle
 
-Particle, from Party Cal, is a small Ruby command-line static-site generator. It downloads one or more private iCalendar subscriptions, treats every event in every feed as busy, merges the busy periods, subtracts them from configured availability hours, and writes a mobile-friendly four-week view containing only free time.
+Particle, from Party Cal, is a small Ruby command-line static-site generator. It downloads one or more private iCalendar subscriptions, treats every valid event in every feed as busy, merges the busy periods, subtracts them from configured availability hours, and writes a mobile-friendly four-week view containing only free time.
 
 There is no Rails application, database, browser API, booking flow, or Ruby process at request time. Nginx serves the files in `public/` directly.
 
@@ -12,7 +12,7 @@ private ICS feeds → Ruby generator → public/index.html → Nginx → HTTPS
 
 Calendar URLs are used only by the generator. The generated HTML contains dates, calculated free intervals, and an update timestamp. It never renders titles, descriptions, locations, attendees, UIDs, calendar names, source URLs, or raw ICS. Logs refer to feeds only as `Calendar 1`, `Calendar 2`, and so on.
 
-All configured feeds must download and parse successfully. If any feed fails, generation exits non-zero before publishing. Output is prepared in temporary files on the same filesystem and `index.html` is atomically renamed only after the complete calculation and render succeed, preserving the previously known-good page.
+All configured feeds must download and be parseable as calendars. If any feed fails, generation exits non-zero before publishing. Individual malformed events are silently ignored, which can display false free time if a skipped event was intended to be busy. Output is prepared in temporary files on the same filesystem and `index.html` is atomically renamed only after the complete calculation and render succeed, preserving the previously known-good page.
 
 The page includes `noindex, nofollow, noarchive`, and `public/robots.txt` disallows crawling. These are requests to well-behaved crawlers, **not authentication or access control**. A long random path reduces accidental discovery but does not prevent a recipient from sharing the URL.
 
@@ -243,12 +243,12 @@ Install [`deploy/availability.logrotate`](deploy/availability.logrotate) as `/et
 - **Missing environment variable:** an exact `${NAME}` URL placeholder requires `NAME` in the generator process, including cron/systemd.
 - **Unknown timezone:** use an IANA identifier such as `Europe/Berlin`, not an informal abbreviation.
 - **Calendar download failed:** test outbound DNS/TLS access from the generator account and confirm the subscription was not revoked. Logs intentionally omit the URL and query token.
-- **Calendar parse failed:** download the feed securely and validate that it is ICS, not an HTML sign-in/error page. Never paste it into public diagnostics.
+- **Calendar parse failed:** download the feed securely and validate that it is ICS, not an HTML sign-in/error page. Individual malformed events are ignored, but a feed that cannot be parsed as a calendar still fails. Never paste it into public diagnostics.
 - **Old update timestamp:** inspect cron logs. A stale page usually means a later run failed safely.
 - **Permission denied while publishing:** the generator needs write permission on `public/`; Nginx needs read permission only.
 
 ## Known limits
 
-The generator supports normal timed, all-day, overnight, multi-day, recurring, `EXDATE`, `RDATE`, and exact detached `RECURRENCE-ID` events. Floating timed events without a `TZID` are interpreted in the configured timezone. Rare recurrence features such as `RANGE=THISANDFUTURE`, non-IANA/custom time-zone definitions that cannot be mapped by the parser, and malformed feeds may be rejected or require feed-specific work.
+The generator supports normal timed, all-day, overnight, multi-day, recurring, `EXDATE`, `RDATE`, and exact detached `RECURRENCE-ID` events. Floating timed events without a `TZID` are interpreted in the configured timezone. Malformed individual events are ignored. Rare recurrence features such as `RANGE=THISANDFUTURE`, non-IANA/custom time-zone definitions that cannot be mapped by the parser, and malformed feeds may be rejected or require feed-specific work.
 
 HTTP validators (`ETag` and `Last-Modified`) are not persisted in this intentionally stateless version. Every successful run downloads every feed, prioritizing freshness and safe all-or-nothing generation.
