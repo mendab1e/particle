@@ -14,7 +14,7 @@ Calendar URLs are used only by the generator. The generated HTML contains dates,
 
 All configured feeds must download and be parseable as calendars. If any feed fails, generation exits non-zero before publishing. Individual malformed events are ignored, and logs report only a count such as `Calendar 1 ignored 2 malformed events`. No event values are logged. Skipping an event can display false free time if that event was intended to be busy. Output is prepared in temporary files on the same filesystem and `index.html` is atomically renamed only after the complete calculation and render succeed, preserving the previously known-good page.
 
-The page includes `noindex, nofollow, noarchive`, and `public/robots.txt` disallows crawling. These are requests to well-behaved crawlers, **not authentication or access control**. A long random path reduces accidental discovery but does not prevent a recipient from sharing the URL.
+The page includes `noindex, nofollow, noarchive, nosnippet, noimageindex` plus a no-referrer policy, and `public/robots.txt` disallows all crawling. The Nginx example reinforces those directives with response headers, disables shared/browser caching, and serves the robots policy from the required origin-wide `/robots.txt` location. These are requests to well-behaved crawlers, **not authentication or access control**. A long random path reduces accidental discovery but does not prevent a recipient from sharing the URL. Enable HTTP authentication in Nginx if non-discoverability must be enforced against arbitrary scrapers.
 
 ## Requirements and installation
 
@@ -210,7 +210,7 @@ Ensure the generator user can replace files in `public/`, while the Nginx worker
 
 ### Nginx and a random path
 
-[`deploy/availability.nginx.conf`](deploy/availability.nginx.conf) contains a complete server-block example. Its exact-match locations expose only `public/index.html` and `public/robots.txt` at a path such as:
+[`deploy/availability.nginx.conf`](deploy/availability.nginx.conf) contains a complete server-block example. Its exact-match locations expose only `public/index.html` at a path such as:
 
 ```text
 https://example.com/a8f2c9e71d4b/
@@ -225,7 +225,19 @@ sudo nginx -t
 sudo systemctl reload nginx
 ```
 
-Configure TLS certificates separately. The random path belongs only in Nginx; calendar calculation and generated links do not depend on it. On a dedicated hostname, you may additionally serve the generated `robots.txt` at the origin-wide `/robots.txt`. On a shared hostname, take care not to change crawling policy for unrelated pages.
+Configure TLS certificates separately. The random path belongs only in Nginx; calendar calculation and generated links do not depend on it. The example serves `public/robots.txt` at the origin-wide `/robots.txt`, which is the only standards-defined location for crawler policy. Use a dedicated hostname: on a shared hostname, this policy would also disallow crawling unrelated pages.
+
+The generated directives cover compliant search engines, AI crawlers, and other robots through the wildcard `User-agent: *` rule. They cannot stop clients that ignore `robots.txt`, spoof a browser, follow a user-provided URL, or learn the URL elsewhere. To enforce privacy after a URL is discovered, create a password file and enable the commented `auth_basic` lines in the page location:
+
+```bash
+sudo htpasswd -c /etc/nginx/availability.htpasswd availability
+sudo chown root:www-data /etc/nginx/availability.htpasswd
+sudo chmod 640 /etc/nginx/availability.htpasswd
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+Replace `www-data` with the Nginx worker group used by your distribution. HTTP authentication is the protection boundary; the random path and crawler directives remain defense in depth.
 
 ### Hourly cron regeneration
 

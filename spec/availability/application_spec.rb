@@ -91,7 +91,10 @@ RSpec.describe Availability::Application do
       end
 
       it 'discourages crawling', :aggregate_failures do
-        expect(File.read(paths.fetch(:index))).to include('noindex, nofollow, noarchive')
+        expect(File.read(paths.fetch(:index))).to include(
+          'noindex, nofollow, noarchive, nosnippet, noimageindex',
+          '<meta name="referrer" content="no-referrer">'
+        )
         expect(File.read(paths.fetch(:robots))).to eq("User-agent: *\nDisallow: /\n")
       end
 
@@ -152,6 +155,25 @@ RSpec.describe Availability::Application do
 
         expect(output.string).to include('Calendar 1 ignored 1 malformed event')
         expect(output.string).not_to match(/malformed-private-id|Private malformed event/)
+      end
+    end
+
+    context 'with the Nginx deployment example' do
+      subject(:nginx_configuration) do
+        File.read(File.expand_path('../../deploy/availability.nginx.conf', __dir__))
+      end
+
+      it 'publishes crawler policy at the origin root and suppresses indexing and caches', :aggregate_failures do
+        expect(nginx_configuration).to include(
+          'location = /robots.txt',
+          'X-Robots-Tag "noindex, nofollow, noarchive, nosnippet, noimageindex"',
+          'Cache-Control "private, no-store, max-age=0"',
+          'Referrer-Policy "no-referrer"'
+        )
+      end
+
+      it 'does not rely on a robots file below the private path' do
+        expect(nginx_configuration).not_to include('location = /a8f2c9e71d4b/robots.txt')
       end
     end
   end
