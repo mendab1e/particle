@@ -78,6 +78,7 @@ calendar_urls:
 
 days_to_show: 28
 minimum_slot_minutes: 60
+first_day_of_week: monday
 
 event_buffer:
   before_minutes: 30
@@ -149,6 +150,14 @@ availability:
       end: "18:00"
   monday:
     unavailable: true
+```
+
+### Calendar week start
+
+`first_day_of_week` controls the first column of the rendered calendar and its week labels. It defaults to `monday`; use any lowercase weekday name, for example:
+
+```yaml
+first_day_of_week: sunday
 ```
 
 ### Minimum slots and event buffers

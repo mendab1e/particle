@@ -68,7 +68,8 @@ module Availability
         timezone: config.timezone,
         enabled: config.enabled,
         today: today,
-        days_to_show: config.days_to_show
+        days_to_show: config.days_to_show,
+        first_day_of_week: config.first_day_of_week
       )
     end
 

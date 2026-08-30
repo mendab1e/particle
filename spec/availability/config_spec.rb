@@ -126,6 +126,28 @@ RSpec.describe Availability::Config do
       end
     end
 
+    context 'without a first day of the week' do
+      it 'defaults the calendar layout to Monday' do
+        expect(config.first_day_of_week).to eq('monday')
+      end
+    end
+
+    context 'with a configured first day of the week' do
+      let(:attributes) { config_attributes('first_day_of_week' => 'sunday') }
+
+      it 'accepts a weekday name' do
+        expect(config.first_day_of_week).to eq('sunday')
+      end
+    end
+
+    context 'with an invalid first day of the week' do
+      let(:attributes) { config_attributes('first_day_of_week' => 'weekend') }
+
+      it 'rejects the invalid weekday' do
+        expect { config }.to raise_error(Availability::ConfigError, /first_day_of_week must be one of/)
+      end
+    end
+
     context 'with no calendars while enabled' do
       let(:attributes) { config_attributes('calendar_urls' => []) }
 

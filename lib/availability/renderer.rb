@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'cgi'
+require 'date'
 require 'erb'
 
 module Availability
@@ -12,14 +13,15 @@ module Availability
       @template = ERB.new(File.read(template_path), trim_mode: '-')
     end
 
-    def render(days:, generated_at:, timezone:, enabled:, today:, days_to_show:)
+    def render(days:, generated_at:, timezone:, enabled:, today:, days_to_show:, first_day_of_week:)
       view = View.new(
         days: days,
         generated_at: generated_at,
         timezone: timezone,
         enabled: enabled,
         today: today,
-        days_to_show: days_to_show
+        days_to_show: days_to_show,
+        first_day_of_week: first_day_of_week
       )
       @template.result(view.template_binding)
     end
@@ -30,13 +32,14 @@ module Availability
 
       attr_reader :enabled, :today
 
-      def initialize(days:, generated_at:, timezone:, enabled:, today:, days_to_show:)
+      def initialize(days:, generated_at:, timezone:, enabled:, today:, days_to_show:, first_day_of_week:)
         @days = days
         @generated_at = generated_at
         @timezone = timezone
         @enabled = enabled
         @today = today
         @days_to_show = days_to_show
+        @first_day_of_week = first_day_of_week
       end
 
       def template_binding
@@ -57,8 +60,8 @@ module Availability
 
       def format_week_label(week)
         first_date = week.compact.first.date
-        monday = first_date - (first_date.cwday - 1)
-        "Week of #{monday.day} #{monday.strftime('%B %Y')}"
+        week_start = first_date - weekday_offset(first_date)
+        "Week of #{week_start.day} #{week_start.strftime('%B %Y')}"
       end
 
       def format_time(time)
@@ -68,13 +71,13 @@ module Availability
       def weeks
         return [] if @days.empty?
 
-        padded_days = Array.new(@days.first.date.cwday - 1) + @days
+        padded_days = Array.new(weekday_offset(@days.first.date)) + @days
         padded_days.concat(Array.new((7 - padded_days.length) % 7))
         padded_days.each_slice(7).to_a
       end
 
       def weekdays
-        WEEKDAYS
+        WEEKDAYS.rotate(WEEKDAYS.index(@first_day_of_week))
       end
 
       def updated_at
@@ -96,6 +99,12 @@ module Availability
         return "#{@today.day}–#{final_with_year}" if @today.month == final_date.month
 
         "#{@today.strftime('%-d %b')}–#{final_with_year}"
+      end
+
+      private
+
+      def weekday_offset(date)
+        (date.wday - Date::DAYNAMES.index(@first_day_of_week.capitalize)) % 7
       end
     end
   end

@@ -10,6 +10,9 @@ calendar_urls:
 days_to_show: 28
 minimum_slot_minutes: 60
 
+# The calendar grid starts on Monday by default. Any lowercase weekday is accepted.
+first_day_of_week: monday
+
 event_buffer:
   before_minutes: 0
   after_minutes: 0

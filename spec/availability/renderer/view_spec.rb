@@ -10,12 +10,14 @@ RSpec.describe Availability::Renderer::View do
       timezone: TZInfo::Timezone.get('Europe/Berlin'),
       enabled: true,
       today: start_date,
-      days_to_show: days_to_show
+      days_to_show: days_to_show,
+      first_day_of_week: first_day_of_week
     )
   end
 
   let(:start_date) { Date.new(2026, 8, 30) }
   let(:days_to_show) { 28 }
+  let(:first_day_of_week) { 'monday' }
 
   describe '#period_description' do
     context 'when the range stays within one month' do
@@ -51,8 +53,26 @@ RSpec.describe Availability::Renderer::View do
   describe '#format_week_label' do
     let(:day) { Availability::DayAvailability.new(date: Date.new(2026, 8, 30), slots: []) }
 
-    it 'labels the containing Monday-first week' do
+    it 'labels the containing Monday-first week by default' do
       expect(view.format_week_label([nil, nil, nil, nil, nil, nil, day])).to eq('Week of 24 August 2026')
+    end
+
+    context 'when Sunday is the configured first day' do
+      let(:first_day_of_week) { 'sunday' }
+
+      it 'labels the containing Sunday-first week' do
+        expect(view.format_week_label([day, nil, nil, nil, nil, nil, nil])).to eq('Week of 30 August 2026')
+      end
+    end
+  end
+
+  describe '#weekdays' do
+    context 'when Sunday is the configured first day' do
+      let(:first_day_of_week) { 'sunday' }
+
+      it 'rotates the weekday headings' do
+        expect(view.weekdays).to eq(%w[sunday monday tuesday wednesday thursday friday saturday])
+      end
     end
   end
 end

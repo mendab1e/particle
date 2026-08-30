@@ -92,7 +92,7 @@ RSpec.describe Availability::Application do
         expect(html.scan('<rect class="brand-mark-particle"').size).to eq(1)
       end
 
-      it 'renders scannable Monday-first calendar rows with compact dates', :aggregate_failures do
+      it 'renders scannable Monday-first calendar rows with compact dates by default', :aggregate_failures do
         html = File.read(paths.fetch(:index))
 
         expect(html.index('data-weekday="monday"')).to be < html.index('Wednesday, 26 August 2026')
@@ -178,6 +178,24 @@ RSpec.describe Availability::Application do
 
       it 'publishes an Nginx-readable index' do
         expect(File.stat(paths.fetch(:index)).mode & 0o777).to eq(0o644)
+      end
+    end
+
+    context 'when Sunday is configured as the first day of the week' do
+      before do
+        sunday_first_config = config_contents.sub(
+          'minimum_slot_minutes: 30',
+          "minimum_slot_minutes: 30\nfirst_day_of_week: sunday"
+        )
+        File.write(paths.fetch(:config), sunday_first_config)
+        run_application
+      end
+
+      it 'renders Sunday-first calendar rows and week labels', :aggregate_failures do
+        html = File.read(paths.fetch(:index))
+
+        expect(html.index('data-weekday="sunday"')).to be < html.index('Wednesday, 26 August 2026')
+        expect(html).to include('Week of 23 August 2026')
       end
     end
 

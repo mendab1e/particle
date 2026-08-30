@@ -14,7 +14,7 @@ module Availability
     include ConfigValueParser
 
     TOP_LEVEL_KEYS = %w[
-      enabled timezone calendar_urls days_to_show minimum_slot_minutes event_buffer availability
+      enabled timezone calendar_urls days_to_show minimum_slot_minutes event_buffer availability first_day_of_week
     ].freeze
     EVENT_BUFFER_KEYS = %w[before_minutes after_minutes].freeze
     WEEKDAYS = %w[sunday monday tuesday wednesday thursday friday saturday].freeze
@@ -24,7 +24,7 @@ module Availability
     MAX_CALENDAR_URLS = 20
 
     attr_reader :enabled, :timezone, :calendar_urls, :days_to_show,
-                :minimum_slot_minutes, :buffer_before_minutes, :buffer_after_minutes
+                :minimum_slot_minutes, :buffer_before_minutes, :buffer_after_minutes, :first_day_of_week
 
     def self.load(path, env: ENV)
       raise ConfigError, "configuration file not found: #{path}" unless File.file?(path)
@@ -41,10 +41,7 @@ module Availability
       @raw = stringify_keys(raw)
       @env = env
       validate_known_keys(@raw, TOP_LEVEL_KEYS, 'configuration')
-      @enabled = boolean('enabled', default: true)
-      @timezone = parse_timezone
-      @days_to_show = bounded_positive_integer('days_to_show', default: 28, maximum: MAX_DAYS_TO_SHOW)
-      @minimum_slot_minutes = nonnegative_integer('minimum_slot_minutes', default: 0)
+      parse_general_settings
       parse_buffers
       @availability = parse_availability
       @calendar_urls = parse_calendar_urls
@@ -55,6 +52,14 @@ module Availability
     end
 
     private
+
+    def parse_general_settings
+      @enabled = boolean('enabled', default: true)
+      @timezone = parse_timezone
+      @days_to_show = bounded_positive_integer('days_to_show', default: 28, maximum: MAX_DAYS_TO_SHOW)
+      @minimum_slot_minutes = nonnegative_integer('minimum_slot_minutes', default: 0)
+      @first_day_of_week = parse_first_day_of_week
+    end
 
     def stringify_keys(value)
       if value.is_a?(Hash)
@@ -74,6 +79,15 @@ module Availability
       TZInfo::Timezone.get(name)
     rescue TZInfo::InvalidTimezoneIdentifier
       raise ConfigError, "timezone is unknown: #{name}"
+    end
+
+    def parse_first_day_of_week
+      day = @raw.fetch('first_day_of_week', 'monday')
+      unless day.is_a?(String) && WEEKDAYS.include?(day)
+        raise ConfigError, "first_day_of_week must be one of: #{WEEKDAYS.join(', ')}"
+      end
+
+      day
     end
 
     def parse_buffers
