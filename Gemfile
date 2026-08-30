@@ -4,11 +4,7 @@ source 'https://rubygems.org'
 
 ruby '3.4.8'
 
-gem 'icalendar', '~> 2.10'
-gem 'icalendar-recurrence', '~> 1.2'
-gem 'tzinfo', '~> 2.0'
-# Preserves named time zones while expanding recurrences across DST changes.
-gem 'activesupport', '~> 6.1.7'
+gemspec
 
 group :development, :test do
   gem 'rake', '~> 13.0'

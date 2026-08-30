@@ -6,4 +6,5 @@ module Availability
   class FetchError < Error; end
   class ParseError < Error; end
   class InvalidEventError < Error; end
+  class SetupError < Error; end
 end

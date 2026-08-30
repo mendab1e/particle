@@ -25,19 +25,14 @@ The page includes `noindex, nofollow, noarchive, nosnippet, noimageindex` plus a
 
 ## Requirements and installation
 
-- Ruby 3.4.8 (pinned in `.ruby-version`)
-- Bundler 2.6 or newer
+- Ruby 3.4 or newer
 - A normal Linux VPS for production
 
-Install dependencies:
+Install the gem to add the `particle` command:
 
 ```bash
-git clone YOUR_REPOSITORY_URL availability
-cd availability
-gem install bundler
-bundle config set --local path vendor/bundle
-bundle install
-cp config/availability.example.yml config/availability.yml
+gem install particle-calendar
+particle --help
 ```
 
 The core libraries are:
@@ -52,7 +47,26 @@ The core libraries are:
 
 ## Configuration
 
-The default path is `config/availability.yml`. That file is ignored by Git; only `config/availability.example.yml` is committed. Select another file with `--config PATH` or `AVAILABILITY_CONFIG`.
+Create a starter configuration, an Nginx server-block sample, and the static output directory:
+
+```bash
+particle setup
+```
+
+By default this writes `particle.yml` with mode `0600`, `particle.nginx.conf`, and `public/` in the current directory. It generates a long random URL path for the Nginx sample and refuses to replace either setup file if it already exists.
+
+Customize every destination when needed:
+
+```bash
+particle setup \
+  --config /opt/particle/availability.yml \
+  --output /var/www/particle \
+  --nginx /opt/particle/particle.nginx.conf \
+  --server-name calendar.example.com \
+  --url-path /replace-with-a-long-random-value/
+```
+
+Run `particle setup --help` for all options. Generation defaults to `particle.yml` and `public/` in the current directory. Select other locations with `--config` and `--output`, or with `PARTICLE_CONFIG` and `PARTICLE_OUTPUT`. `AVAILABILITY_CONFIG` remains accepted for compatibility.
 
 ```yaml
 enabled: true
@@ -92,10 +106,10 @@ Configuration keys are strict: unknown top-level, `event_buffer`, weekday, and w
 
 A URL may be literal, or an exact `${UPPERCASE_ENV_NAME}` placeholder. No ERB is evaluated, so the YAML file cannot execute Ruby code.
 
-For simple VPS use, put literal URLs only in the ignored production file and protect it:
+For simple VPS use, put literal URLs only in the deployment configuration and keep it protected (`particle setup` applies this mode automatically):
 
 ```bash
-chmod 600 config/availability.yml
+chmod 600 /opt/particle/particle.yml
 ```
 
 For environment-based configuration:
@@ -103,7 +117,7 @@ For environment-based configuration:
 ```bash
 export CALENDAR_MAIN_URL='https://calendar.example/private-a.ics?token=...'
 export CALENDAR_EXTRA_URL='https://calendar.example/private-b.ics?token=...'
-bundle exec bin/generate
+particle generate
 ```
 
 Do not paste private subscription URLs into source control, shell history, issue trackers, or Nginx configuration. The generator never prints them, even when a request fails.
@@ -147,24 +161,18 @@ availability:
 
 Set `enabled: false` to skip all network access and render a “Calendar not available” page. `calendar_urls` may be empty in this mode. This is useful when availability should be withdrawn without changing Nginx.
 
-## Running and testing
+## Running
 
 Generate manually:
 
 ```bash
-bundle exec bin/generate
-```
-
-Refresh the deterministic sample page:
-
-```bash
-bundle exec bin/generate-sample
+particle generate
 ```
 
 Useful options:
 
 ```bash
-bundle exec bin/generate --config /etc/availability.yml --output /var/www/availability
+particle generate --config /etc/particle.yml --output /var/www/particle
 ```
 
 Successful output looks like:
@@ -175,7 +183,23 @@ Successful output looks like:
 [2026-08-26 09:17:02] Calendar 2 ignored 1 malformed event
 [2026-08-26 09:17:02] Calendar 2 fetched and parsed successfully
 [2026-08-26 09:17:02] Calculating availability for 2026-08-26..2026-09-22
-[2026-08-26 09:17:02] Generated /opt/availability/public/index.html
+[2026-08-26 09:17:02] Generated /var/www/particle/index.html
+```
+
+## Development and testing
+
+Source development uses the Ruby 3.4.8 version pinned in `.ruby-version` and Bundler 2.6 or newer. After cloning the repository:
+
+```bash
+bundle install
+bundle exec bin/generate
+bundle exec bin/generate --config /path/to/config.yml --output /path/to/public
+```
+
+Refresh the deterministic sample page with synthetic data:
+
+```bash
+bundle exec bin/generate-sample
 ```
 
 Run the complete test suite:
@@ -194,36 +218,34 @@ Tests cover interval subtraction, overlap and adjacency merging, multiple-calend
 
 ## VPS deployment
 
-The following example keeps the repository out of Nginx's document tree:
+The following example keeps the generator installation out of Nginx's document tree:
 
 ```text
 Ruby generator
       ↓
-/opt/availability/public
+/opt/particle/public
       ↓
 Nginx
       ↓
 HTTPS
 ```
 
-Create a dedicated account or deploy as an unprivileged service user, install Ruby 3.4.8, and place the project at `/opt/availability`:
+Create a dedicated account or deploy as an unprivileged service user, install Ruby 3.4, and install the gem. Create `/opt/particle` as a directory owned by that user, then initialize the deployment:
 
 ```bash
-cd /opt/availability
-bundle config set --local path vendor/bundle
-bundle config set --local without development:test
-bundle install
-cp config/availability.example.yml config/availability.yml
-chmod 600 config/availability.yml
-mkdir -p log public
-bundle exec bin/generate
+gem install particle-calendar
+cd /opt/particle
+mkdir -p log
+particle setup --server-name calendar.example.com
+# Edit particle.yml and replace the example calendar placeholders.
+particle generate --config /opt/particle/particle.yml --output /opt/particle/public
 ```
 
-Ensure the generator user can replace files in `public/`, while the Nginx worker can read them. Do not set Nginx `root` or `alias` to `/opt/availability`; only map its `public` files.
+Ensure the generator user can replace files in `public/`, while the Nginx worker can read them. Do not set Nginx `root` or `alias` to `/opt/particle`; only map the generated public files.
 
 ### Nginx and a random path
 
-[`deploy/availability.nginx.conf`](deploy/availability.nginx.conf) contains a complete server-block example. Its exact-match locations expose `public/index.html` and its generated `public/favicon.svg` at a path such as:
+`particle setup` creates `particle.nginx.conf` with exact-match locations exposing `public/index.html` and its generated `public/favicon.svg` at a random path such as:
 
 ```text
 https://example.com/a8f2c9e71d4b/
@@ -232,8 +254,8 @@ https://example.com/a8f2c9e71d4b/
 Copy and edit it, then validate and reload:
 
 ```bash
-sudo cp deploy/availability.nginx.conf /etc/nginx/sites-available/availability
-sudo ln -s /etc/nginx/sites-available/availability /etc/nginx/sites-enabled/availability
+sudo cp /opt/particle/particle.nginx.conf /etc/nginx/sites-available/particle
+sudo ln -s /etc/nginx/sites-available/particle /etc/nginx/sites-enabled/particle
 sudo nginx -t
 sudo systemctl reload nginx
 ```
@@ -243,9 +265,9 @@ Configure TLS certificates separately. The random path belongs only in Nginx; ca
 The generated directives cover compliant search engines, AI crawlers, and other robots through the wildcard `User-agent: *` rule. They cannot stop clients that ignore `robots.txt`, spoof a browser, follow a user-provided URL, or learn the URL elsewhere. To enforce privacy after a URL is discovered, create a password file and enable the commented `auth_basic` lines in the page location:
 
 ```bash
-sudo htpasswd -c /etc/nginx/availability.htpasswd availability
-sudo chown root:www-data /etc/nginx/availability.htpasswd
-sudo chmod 640 /etc/nginx/availability.htpasswd
+sudo htpasswd -c /etc/nginx/particle.htpasswd availability
+sudo chown root:www-data /etc/nginx/particle.htpasswd
+sudo chmod 640 /etc/nginx/particle.htpasswd
 sudo nginx -t
 sudo systemctl reload nginx
 ```
@@ -254,20 +276,20 @@ Replace `www-data` with the Nginx worker group used by your distribution. HTTP a
 
 ### Hourly cron regeneration
 
-Confirm the absolute Bundler path with `command -v bundle`, then add a crontab entry for the unprivileged generator user. It intentionally does not run at minute zero:
+Confirm the absolute executable path with `command -v particle`, then add a crontab entry for the unprivileged generator user. The example assumes `/usr/local/bin/particle`; replace it with the path reported on your server. It intentionally does not run at minute zero:
 
 ```cron
 PATH=/usr/local/bin:/usr/bin:/bin
-17 * * * * cd /opt/availability && bundle exec bin/generate >> /opt/availability/log/generator.log 2>&1
+17 * * * * /usr/local/bin/particle generate --config /opt/particle/particle.yml --output /opt/particle/public >> /opt/particle/log/generator.log 2>&1
 ```
 
-If the Ruby installation lives elsewhere, put its `bin` directory first in `PATH` or use the absolute `bundle` path. Cron has a minimal environment. When YAML uses `${...}` placeholders, load protected environment values through a small root-owned wrapper or use a systemd timer with `EnvironmentFile=`; do not put secret URLs directly in the crontab.
+If the Ruby installation lives elsewhere, use the absolute `particle` path reported by `command -v particle`. Cron has a minimal environment. When YAML uses `${...}` placeholders, load protected environment values through a small root-owned wrapper or use a systemd timer with `EnvironmentFile=`; do not put secret URLs directly in the crontab.
 
-Install [`deploy/availability.logrotate`](deploy/availability.logrotate) as `/etc/logrotate.d/availability`, or send output to syslog/systemd instead. A failed cron run exits non-zero and leaves the last successfully generated page online; monitor the exit code or log rather than assuming hourly freshness.
+The repository includes a [`deploy/availability.logrotate`](deploy/availability.logrotate) example that can be adapted to `/opt/particle/log/generator.log`, or send output to syslog/systemd instead. A failed cron run exits non-zero and leaves the last successfully generated page online; monitor the exit code or log rather than assuming hourly freshness.
 
 ## Troubleshooting
 
-- **Configuration file not found / invalid YAML:** verify `AVAILABILITY_CONFIG` or `--config`, indentation, and that secrets are readable by the generator user.
+- **Configuration file not found / invalid YAML:** verify `PARTICLE_CONFIG` or `--config`, indentation, and that secrets are readable by the generator user.
 - **Missing environment variable:** an exact `${NAME}` URL placeholder requires `NAME` in the generator process, including cron/systemd.
 - **Unknown timezone:** use an IANA identifier such as `Europe/Berlin`, not an informal abbreviation.
 - **Calendar download failed:** test outbound DNS/TLS access from the generator account and confirm the subscription was not revoked. Logs intentionally omit the URL and query token.

@@ -1,3 +1,12 @@
+PATH
+  remote: .
+  specs:
+    particle-calendar (0.1.0)
+      activesupport (~> 6.1.7)
+      icalendar (~> 2.10)
+      icalendar-recurrence (~> 1.2)
+      tzinfo (~> 2.0)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -105,16 +114,13 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  activesupport (~> 6.1.7)
-  icalendar (~> 2.10)
-  icalendar-recurrence (~> 1.2)
+  particle-calendar!
   rake (~> 13.0)
   rspec (~> 3.12)
   rubocop
   rubocop-performance
   rubocop-rake
   rubocop-rspec
-  tzinfo (~> 2.0)
   webmock (~> 3.19)
 
 RUBY VERSION

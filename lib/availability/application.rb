@@ -4,7 +4,7 @@ module Availability
   # Coordinates configuration, calendar ingestion, calculation, and publishing.
   class Application
     DEFAULT_CLOCK = -> { Time.now.utc }
-    DEFAULT_FAVICON_PATH = File.expand_path('../../assets/favicon.svg', __dir__)
+    DEFAULT_FAVICON_PATH = Assets.favicon_path
 
     def initialize(config_path:, output_dir:, template_path:, output: $stdout, clock: DEFAULT_CLOCK,
                    fetcher: CalendarFetcher.new, favicon_path: DEFAULT_FAVICON_PATH)

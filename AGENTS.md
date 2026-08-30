@@ -42,8 +42,10 @@ Configuration accepts literal `http:`, `https:`, or `webcal:` URLs and exact `${
 ## Architecture and data flow
 
 ```text
-bin/generate
-  -> Availability::Application
+exe/particle
+  -> Availability::CLI
+      -> setup: Availability::Setup
+      -> generate: Availability::Application
       -> Config
       -> CalendarFetcher (once per URL)
       -> CalendarParser (ICS -> BusyPeriod[])
@@ -54,7 +56,10 @@ bin/generate
 
 ### Entry and orchestration
 
-- `bin/generate`: parses `--config` and `--output`, invokes the application, prints sanitized failures, and exits non-zero on errors.
+- `exe/particle`: installed gem executable for `setup`, `generate`, help, and version commands.
+- `lib/availability/cli.rb`: parses subcommands and options, selects packaged runtime assets, prints sanitized failures, and returns conventional exit statuses.
+- `lib/availability/setup.rb`: safely creates a mode-`0600` sample config, a customized Nginx sample, and the output directory without overwriting existing setup files.
+- `bin/generate`: source-checkout compatibility wrapper around `particle generate`.
 - `lib/availability.rb`: requires project components in dependency order.
 - `lib/availability/application.rb`: owns one complete generation run, logs high-level progress, expands the event query range for buffers, and enforces all-or-nothing feed processing.
 
@@ -78,6 +83,7 @@ bin/generate
 
 - `lib/availability/renderer.rb`: exposes only display-safe availability values to ERB and formats local dates/times.
 - `templates/index.html.erb`: self-contained responsive HTML/CSS; no JavaScript or external assets. It displays only free periods and includes `noindex, nofollow, noarchive`.
+- `templates/nginx.conf.erb`: packaged Nginx server-block template rendered by `particle setup` with the selected output directory and private URL path.
 - `lib/availability/atomic_writer.rb`: prepares same-filesystem tempfiles, cleans partial failures, publishes `index.html` last, and sets static files to mode `0644`.
 - `public/`: generated output. Do not hand-edit it; regenerate it.
 
@@ -106,6 +112,9 @@ Before running any Ruby or Bundler command, initialize `rbenv` and verify that i
 
 ```bash
 bundle install
+bundle exec particle setup
+bundle exec particle generate
+bundle exec particle generate --config /path/to/config.yml --output /path/to/public
 bundle exec bin/generate
 bundle exec bin/generate --config /path/to/config.yml --output /path/to/public
 bundle exec rspec

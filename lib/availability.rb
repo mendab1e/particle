@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative 'availability/version'
+require_relative 'availability/assets'
 require_relative 'availability/errors'
 require_relative 'availability/calendar_url'
 require_relative 'availability/config_value_parser'
@@ -14,3 +16,5 @@ require_relative 'availability/availability_calculator'
 require_relative 'availability/renderer'
 require_relative 'availability/atomic_writer'
 require_relative 'availability/application'
+require_relative 'availability/setup'
+require_relative 'availability/cli'
