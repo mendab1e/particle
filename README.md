@@ -1,4 +1,7 @@
-# Particle
+<h1>
+  <img src="assets/favicon.svg" alt="" width="48" height="48" align="center">
+  Particle.
+</h1>
 
 Particle, from Party Cal, is a Ruby command-line static-site generator. It downloads one or more private iCalendar subscriptions, treats every valid event in every feed as busy, merges the busy periods, subtracts them from configured availability hours, and writes a mobile-friendly calendar view containing only free time.
 
@@ -210,7 +213,7 @@ Ensure the generator user can replace files in `public/`, while the Nginx worker
 
 ### Nginx and a random path
 
-[`deploy/availability.nginx.conf`](deploy/availability.nginx.conf) contains a complete server-block example. Its exact-match locations expose only `public/index.html` at a path such as:
+[`deploy/availability.nginx.conf`](deploy/availability.nginx.conf) contains a complete server-block example. Its exact-match locations expose `public/index.html` and its generated `public/favicon.svg` at a path such as:
 
 ```text
 https://example.com/a8f2c9e71d4b/

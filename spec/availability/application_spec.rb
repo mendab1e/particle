@@ -13,6 +13,7 @@ RSpec.describe Availability::Application do
         config: File.join(directory, 'availability.yml'),
         output: output_dir,
         index: File.join(output_dir, 'index.html'),
+        favicon: File.join(output_dir, 'favicon.svg'),
         robots: File.join(output_dir, 'robots.txt'),
         template: File.expand_path('../../templates/index.html.erb', __dir__),
         fixture: File.expand_path('../fixtures/sample.ics', __dir__)
@@ -69,6 +70,26 @@ RSpec.describe Availability::Application do
           '<span>Particle</span>', 'last updated:'
         )
         expect(html).not_to include('The free parts of my calendar.', '26–27 Aug 2026')
+      end
+
+      it 'renders the Particle calendar mark beside the title', :aggregate_failures do
+        html = File.read(paths.fetch(:index))
+
+        expect(html).to include(
+          '<div class="brand">',
+          '<svg class="brand-mark" viewBox="0 0 64 64" aria-hidden="true" focusable="false">',
+          '<rect class="brand-mark-shell" x="7.5" y="10.5" width="47" height="45" rx="9"/>',
+          '<h1>Particle</h1>',
+          '<rect class="brand-mark-particle" x="40.5" y="42.5" width="7" height="7" rx="1.5"/>'
+        )
+        expect(html.index('class="brand-mark"')).to be < html.index('<h1>Particle</h1>')
+      end
+
+      it 'uses five dots and one square in the Particle mark', :aggregate_failures do
+        html = File.read(paths.fetch(:index))
+
+        expect(html.scan('<circle class="brand-mark-cell"').size).to eq(5)
+        expect(html.scan('<rect class="brand-mark-particle"').size).to eq(1)
       end
 
       it 'renders scannable Monday-first calendar rows with compact dates', :aggregate_failures do
@@ -143,6 +164,16 @@ RSpec.describe Availability::Application do
           '<meta name="referrer" content="no-referrer">'
         )
         expect(File.read(paths.fetch(:robots))).to eq("User-agent: *\nDisallow: /\n")
+      end
+
+      it 'publishes and links the Particle favicon', :aggregate_failures do
+        html = File.read(paths.fetch(:index))
+        favicon = File.read(paths.fetch(:favicon))
+
+        expect(html).to include('<link rel="icon" href="favicon.svg" type="image/svg+xml">')
+        expect(favicon).to include('<svg', 'viewBox="0 0 64 64"', 'fill="#0284c7"')
+        expect(favicon).to include('cx="32" cy="34"', 'cx="32" cy="46"', 'x="42" y="42"')
+        expect(File.stat(paths.fetch(:favicon)).mode & 0o777).to eq(0o644)
       end
 
       it 'publishes an Nginx-readable index' do
@@ -221,6 +252,14 @@ RSpec.describe Availability::Application do
 
       it 'does not rely on a robots file below the private path' do
         expect(nginx_configuration).not_to include('location = /a8f2c9e71d4b/robots.txt')
+      end
+
+      it 'exposes only the favicon below the private path' do
+        expect(nginx_configuration).to include(
+          'location = /a8f2c9e71d4b/favicon.svg',
+          'alias /opt/availability/public/favicon.svg',
+          'default_type image/svg+xml'
+        )
       end
     end
   end

@@ -4,12 +4,14 @@ module Availability
   # Coordinates configuration, calendar ingestion, calculation, and publishing.
   class Application
     DEFAULT_CLOCK = -> { Time.now.utc }
+    DEFAULT_FAVICON_PATH = File.expand_path('../../assets/favicon.svg', __dir__)
 
     def initialize(config_path:, output_dir:, template_path:, output: $stdout, clock: DEFAULT_CLOCK,
-                   fetcher: CalendarFetcher.new)
+                   fetcher: CalendarFetcher.new, favicon_path: DEFAULT_FAVICON_PATH)
       @config_path = config_path
       @output_dir = output_dir
       @template_path = template_path
+      @favicon_path = favicon_path
       @output = output
       @clock = clock
       @fetcher = fetcher
@@ -54,7 +56,13 @@ module Availability
     end
 
     def publish(config, now, today, days)
-      html = Renderer.new(template_path: @template_path).render(
+      html = render_page(config, now, today, days)
+      AtomicWriter.write_all(@output_dir, generated_files(html))
+      log(config, now, "Generated #{File.join(@output_dir, 'index.html')}")
+    end
+
+    def render_page(config, now, today, days)
+      Renderer.new(template_path: @template_path).render(
         days: days,
         generated_at: now,
         timezone: config.timezone,
@@ -62,8 +70,14 @@ module Availability
         today: today,
         days_to_show: config.days_to_show
       )
-      AtomicWriter.write_all(@output_dir, 'index.html' => html, 'robots.txt' => Renderer::ROBOTS)
-      log(config, now, "Generated #{File.join(@output_dir, 'index.html')}")
+    end
+
+    def generated_files(html)
+      {
+        'favicon.svg' => File.binread(@favicon_path),
+        'robots.txt' => Renderer::ROBOTS,
+        'index.html' => html
+      }
     end
 
     def fetch_periods(config, parser, range_start, range_end, now)

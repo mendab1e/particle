@@ -6,6 +6,7 @@
   <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
   <meta name="referrer" content="no-referrer">
   <meta name="color-scheme" content="light dark">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <title>Particle — Availability calendar</title>
   <style>
     :root {
@@ -47,6 +48,36 @@
     }
 
     header { margin-bottom: 2rem; }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: clamp(0.65rem, 2vw, 0.95rem);
+    }
+
+    .brand-mark {
+      width: clamp(2.7rem, 8vw, 4rem);
+      height: clamp(2.7rem, 8vw, 4rem);
+      flex: 0 0 auto;
+      overflow: visible;
+    }
+
+    .brand-mark-shell {
+      fill: var(--surface);
+      stroke: var(--text);
+      stroke-width: 2.5;
+    }
+
+    .brand-mark-divider,
+    .brand-mark-binding {
+      fill: none;
+      stroke: var(--text);
+      stroke-linecap: round;
+      stroke-width: 2.5;
+    }
+
+    .brand-mark-cell,
+    .brand-mark-particle { fill: var(--accent); }
 
     h1 {
       margin: 0;
@@ -336,7 +367,20 @@
 <body>
   <main>
     <header>
-      <h1>Particle</h1>
+      <div class="brand">
+        <svg class="brand-mark" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+          <rect class="brand-mark-shell" x="7.5" y="10.5" width="47" height="45" rx="9"/>
+          <path class="brand-mark-divider" d="M8 24.5h46"/>
+          <path class="brand-mark-binding" d="M19.5 6.5v8M42.5 6.5v8"/>
+          <circle class="brand-mark-cell" cx="18" cy="34" r="3"/>
+          <circle class="brand-mark-cell" cx="31" cy="34" r="3"/>
+          <circle class="brand-mark-cell" cx="44" cy="34" r="3"/>
+          <circle class="brand-mark-cell" cx="18" cy="46" r="3"/>
+          <circle class="brand-mark-cell" cx="31" cy="46" r="3"/>
+          <rect class="brand-mark-particle" x="40.5" y="42.5" width="7" height="7" rx="1.5"/>
+        </svg>
+        <h1>Particle</h1>
+      </div>
       <p class="intro">
         <span class="subtitle-name">Availability calendar</span>
       </p>
