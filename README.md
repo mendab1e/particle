@@ -1,8 +1,8 @@
 # Particle
 
-Particle, from Party Cal, is a small Ruby command-line static-site generator. It downloads one or more private iCalendar subscriptions, treats every valid event in every feed as busy, merges the busy periods, subtracts them from configured availability hours, and writes a mobile-friendly four-week view containing only free time.
+Particle, from Party Cal, is a Ruby command-line static-site generator. It downloads one or more private iCalendar subscriptions, treats every valid event in every feed as busy, merges the busy periods, subtracts them from configured availability hours, and writes a mobile-friendly calendar view containing only free time.
 
-There is no Rails application, database, browser API, booking flow, or Ruby process at request time. Nginx serves the files in `public/` directly.
+There is no application server, database, browser API, booking flow, or Ruby process at request time. Nginx serves the files in `public/` directly.
 
 ```text
 private ICS feeds → Ruby generator → public/index.html → Nginx → HTTPS
