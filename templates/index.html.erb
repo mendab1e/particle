@@ -15,14 +15,14 @@
       --text: #0f172a;
       --muted: #64748b;
       --border: #dbe2ea;
-      --accent: #7c3aed;
+      --accent: #0284c7;
       --accent-start: #7dd3fc;
       --accent-end: #fef08a;
       --accent-gradient: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-      --accent-strong: #5b21b6;
+      --accent-strong: #075985;
       --accent-start-soft: #e0f2fe;
       --accent-end-soft: #fef9c3;
-      --accent-glow: rgb(124 58 237 / 0.13);
+      --accent-glow: rgb(14 165 233 / 0.13);
       --empty: #94a3b8;
       --shadow: 0 1px 2px rgb(15 23 42 / 0.04), 0 8px 24px rgb(15 23 42 / 0.04);
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -32,6 +32,7 @@
 
     body {
       margin: 0;
+      min-height: 100vh;
       background: radial-gradient(circle at 8% 0%, var(--accent-glow), transparent 28rem), var(--background);
       color: var(--text);
       line-height: 1.45;
@@ -96,7 +97,6 @@
       border-radius: 0.85rem;
       background: var(--surface);
       box-shadow: var(--shadow);
-      transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
     }
 
     .day.placeholder { visibility: hidden; }
@@ -163,6 +163,9 @@
     .disabled p { margin: 0; color: var(--muted); }
 
     footer {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
       margin-top: 2.25rem;
       padding-top: 1rem;
       border-top: 1px solid var(--border);
@@ -170,12 +173,24 @@
       font-size: 0.8rem;
     }
 
-    @media (hover: hover) {
-      .day:not(.placeholder):hover {
-        border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
-        box-shadow: 0 10px 28px rgb(15 23 42 / 0.09);
-        transform: translateY(-2px);
-      }
+    .repository-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .repository-link:hover,
+    .repository-link:focus-visible {
+      color: var(--accent);
+      text-decoration: underline;
+    }
+
+    .github-icon {
+      width: 1rem;
+      height: 1rem;
+      fill: currentColor;
     }
 
     @media (max-width: 58rem) {
@@ -186,12 +201,15 @@
       .day.placeholder { display: none; }
       .day {
         display: grid;
-        grid-template-columns: minmax(8.5rem, 0.7fr) 1.3fr;
+        grid-template-columns: max-content minmax(0, 1fr);
+        column-gap: 0.5rem;
         align-items: start;
         min-height: 0;
         padding: 0.9rem;
       }
-      .date { margin: 0; }
+      .date { margin: 0; white-space: nowrap; }
+      .today-label { display: block; }
+      .slots { justify-content: flex-end; }
     }
 
     @media (prefers-color-scheme: dark) {
@@ -201,21 +219,18 @@
         --text: #f8fafc;
         --muted: #94a3b8;
         --border: #334155;
-        --accent: #c4b5fd;
+        --accent: #7dd3fc;
         --accent-start: #7dd3fc;
         --accent-end: #fef08a;
-        --accent-strong: #ddd6fe;
+        --accent-strong: #bae6fd;
         --accent-start-soft: #0c4a6e;
         --accent-end-soft: #713f12;
-        --accent-glow: rgb(196 181 253 / 0.14);
+        --accent-glow: rgb(125 211 252 / 0.14);
         --empty: #64748b;
         --shadow: 0 1px 2px rgb(0 0 0 / 0.2), 0 10px 28px rgb(0 0 0 / 0.16);
       }
     }
 
-    @media (prefers-reduced-motion: reduce) {
-      .day { transition: none; }
-    }
   </style>
 </head>
 <body>
@@ -266,7 +281,16 @@
       </section>
 <% end -%>
 
-    <footer>Particle · last updated: <%= h updated_at %></footer>
+    <footer>
+      <a class="repository-link" href="https://github.com/mendab1e/particle" aria-label="Particle on GitHub">
+        <svg class="github-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+          <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/>
+        </svg>
+        <span>Particle</span>
+      </a>
+      <span aria-hidden="true">·</span>
+      <span>last updated: <%= h updated_at %></span>
+    </footer>
   </main>
 </body>
 </html>

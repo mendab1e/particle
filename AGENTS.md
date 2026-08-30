@@ -89,7 +89,7 @@ bin/generate
 
 ## Dependencies
 
-- Ruby 3.4.8 and Bundler 2.6+
+- Ruby 3.4.8 and Bundler 2.6+; use `rbenv` to select the version pinned in `.ruby-version` and never use the system Ruby
 - `icalendar` for ICS parsing
 - `icalendar-recurrence`/`ice_cube` for bounded recurrence expansion
 - `activesupport` and `tzinfo` for named timezone/DST behavior
@@ -101,6 +101,8 @@ Do not implement recurrence rules manually. If changing recurrence behavior, fir
 ## Commands
 
 From the repository root:
+
+Before running any Ruby or Bundler command, initialize `rbenv` and verify that it selects the repository's pinned Ruby from `.ruby-version` (install that version through `rbenv` if needed). Do not use the system Ruby.
 
 ```bash
 bundle install

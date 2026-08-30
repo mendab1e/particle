@@ -65,7 +65,9 @@ RSpec.describe Availability::Application do
           '09:00–10:00',
           '11:30–22:00',
           'Party Cal: availability during the next 2 days',
-          '<footer>Particle · last updated:'
+          '<a class="repository-link" href="https://github.com/mendab1e/particle" aria-label="Particle on GitHub">',
+          '<span>Particle</span>',
+          'last updated:'
         )
       end
 
@@ -74,12 +76,34 @@ RSpec.describe Availability::Application do
 
         expect(html.index('data-weekday="monday"')).to be < html.index('Wednesday, 26 August')
         expect(html).to include(
-          '--accent: #7c3aed',
+          'min-height: 100vh',
+          '--accent: #0284c7',
           '--accent-start: #7dd3fc',
           '--accent-end: #fef08a',
           '--accent-gradient: linear-gradient(135deg, var(--accent-start), var(--accent-end))'
         )
         expect(html).to include('border-radius: 0.85rem')
+      end
+
+      it 'keeps mobile dates on one line', :aggregate_failures do
+        html = File.read(paths.fetch(:index))
+
+        expect(html).to include(
+          'grid-template-columns: max-content minmax(0, 1fr)',
+          'column-gap: 0.5rem',
+          '.date { margin: 0; white-space: nowrap; }',
+          '.today-label { display: block; }'
+        )
+      end
+
+      it 'keeps read-only day cards static', :aggregate_failures do
+        html = File.read(paths.fetch(:index))
+
+        expect(html).not_to include(
+          'transition: border-color',
+          '.day:not(.placeholder):hover',
+          'transform: translateY(-2px)'
+        )
       end
 
       it 'does not expose calendar metadata' do
