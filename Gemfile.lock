@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    particle-calendar (0.1.0)
+    particle-calendar (0.1.1)
       activesupport (~> 6.1.7)
       icalendar (~> 2.10)
       icalendar-recurrence (~> 1.2)
