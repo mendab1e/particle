@@ -58,20 +58,27 @@ RSpec.describe Availability::Application do
         expect(run_application).to be(true)
       end
 
-      it 'renders availability and the configured range' do
+      it 'renders availability and the configured range', :aggregate_failures do
         html = File.read(paths.fetch(:index))
         expect(html).to include(
           '09:00–10:00',
           '11:30–22:00',
-          'Party Cal: availability during the next 2 days'
+          'Party Cal: availability during the next 2 days',
+          '<footer>Particle · last updated:'
         )
+        expect(html).not_to include('<footer>Particle · from Party Cal')
       end
 
-      it 'renders Monday-first calendar rows with rounded green card styling', :aggregate_failures do
+      it 'renders Monday-first calendar rows with rounded gradient-accented card styling', :aggregate_failures do
         html = File.read(paths.fetch(:index))
 
         expect(html.index('data-weekday="monday"')).to be < html.index('Wednesday, 26 August')
-        expect(html).to include('--accent: #16835f')
+        expect(html).to include(
+          '--accent: #7c3aed',
+          '--accent-start: #c4b5fd',
+          '--accent-end: #fef08a',
+          '--accent-gradient: linear-gradient(135deg, var(--accent-start), var(--accent-end))'
+        )
         expect(html).to include('border-radius: 0.85rem')
       end
 
