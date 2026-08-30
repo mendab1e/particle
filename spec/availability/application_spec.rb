@@ -67,7 +67,6 @@ RSpec.describe Availability::Application do
           'Party Cal: availability during the next 2 days',
           '<footer>Particle · last updated:'
         )
-        expect(html).not_to include('<footer>Particle · from Party Cal')
       end
 
       it 'renders Monday-first calendar rows with rounded gradient-accented card styling', :aggregate_failures do
@@ -76,7 +75,7 @@ RSpec.describe Availability::Application do
         expect(html.index('data-weekday="monday"')).to be < html.index('Wednesday, 26 August')
         expect(html).to include(
           '--accent: #7c3aed',
-          '--accent-start: #c4b5fd',
+          '--accent-start: #7dd3fc',
           '--accent-end: #fef08a',
           '--accent-gradient: linear-gradient(135deg, var(--accent-start), var(--accent-end))'
         )

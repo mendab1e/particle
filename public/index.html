@@ -2,20 +2,235 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
   <meta name="referrer" content="no-referrer">
+  <meta name="color-scheme" content="light dark">
   <title>Particle — from Party Cal</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --background: #f3f6fb;
+      --surface: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: #dbe2ea;
+      --accent: #7c3aed;
+      --accent-start: #7dd3fc;
+      --accent-end: #fef08a;
+      --accent-gradient: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+      --accent-strong: #5b21b6;
+      --accent-start-soft: #e0f2fe;
+      --accent-end-soft: #fef9c3;
+      --accent-glow: rgb(124 58 237 / 0.13);
+      --empty: #94a3b8;
+      --shadow: 0 1px 2px rgb(15 23 42 / 0.04), 0 8px 24px rgb(15 23 42 / 0.04);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: radial-gradient(circle at 8% 0%, var(--accent-glow), transparent 28rem), var(--background);
+      color: var(--text);
+      line-height: 1.45;
+    }
+
+    main {
+      width: min(100% - 2rem, 68rem);
+      margin: 0 auto;
+      padding: 3.5rem 0 2rem;
+    }
+
+    header { margin-bottom: 2rem; }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 7vw, 3.6rem);
+      font-weight: 720;
+      letter-spacing: -0.045em;
+      line-height: 1;
+    }
+
+    h1::after {
+      content: ".";
+      color: var(--accent);
+    }
+
+    .intro {
+      max-width: 38rem;
+      margin: 0.85rem 0 0;
+      color: var(--muted);
+      font-size: 1.05rem;
+    }
+
+    .week + .week { margin-top: 0.65rem; }
+
+    .weekday-header {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 0.65rem;
+      margin-bottom: 0.55rem;
+    }
+
+    .weekday-header span {
+      padding: 0 1rem;
+      color: var(--muted);
+      font-size: 0.7rem;
+      font-weight: 650;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .days {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 0.65rem;
+    }
+
+    .day {
+      min-height: 10.5rem;
+      padding: 1rem;
+      border: 1px solid var(--border);
+      border-radius: 0.85rem;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+    }
+
+    .day.placeholder { visibility: hidden; }
+    .day.empty { color: var(--empty); }
+
+    .day.today {
+      border-color: transparent;
+      background: linear-gradient(var(--surface), var(--surface)) padding-box,
+        var(--accent-gradient) border-box;
+      box-shadow: 0 0 0 1px var(--accent), 0 12px 28px var(--accent-glow);
+    }
+
+    .date {
+      margin: 0 0 0.85rem;
+      font-size: 0.9rem;
+      font-weight: 690;
+      line-height: 1.25;
+    }
+
+    .today-label {
+      display: inline-block;
+      margin-top: 0.3rem;
+      color: var(--accent);
+      font-size: 0.68rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .slots {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.42rem;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .slot {
+      padding: 0.42rem 0.55rem;
+      border-radius: 0.45rem;
+      background: linear-gradient(135deg, var(--accent-start-soft), var(--accent-end-soft));
+      color: var(--accent-strong);
+      font-size: 0.84rem;
+      font-variant-numeric: tabular-nums;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .none {
+      margin: 0;
+      font-size: 0.84rem;
+    }
+
+    .disabled {
+      max-width: 40rem;
+      padding: 1.4rem;
+      border: 1px solid var(--border);
+      border-radius: 0.85rem;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+
+    .disabled h2 { margin: 0 0 0.35rem; font-size: 1.1rem; }
+    .disabled p { margin: 0; color: var(--muted); }
+
+    footer {
+      margin-top: 2.25rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    @media (hover: hover) {
+      .day:not(.placeholder):hover {
+        border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+        box-shadow: 0 10px 28px rgb(15 23 42 / 0.09);
+        transform: translateY(-2px);
+      }
+    }
+
+    @media (max-width: 58rem) {
+      main { padding-top: 2.25rem; }
+      .weekday-header { display: none; }
+      .week + .week { margin-top: 0.5rem; }
+      .days { grid-template-columns: 1fr; gap: 0.5rem; }
+      .day.placeholder { display: none; }
+      .day {
+        display: grid;
+        grid-template-columns: minmax(8.5rem, 0.7fr) 1.3fr;
+        align-items: start;
+        min-height: 0;
+        padding: 0.9rem;
+      }
+      .date { margin: 0; }
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --background: #0f172a;
+        --surface: #111827;
+        --text: #f8fafc;
+        --muted: #94a3b8;
+        --border: #334155;
+        --accent: #c4b5fd;
+        --accent-start: #7dd3fc;
+        --accent-end: #fef08a;
+        --accent-strong: #ddd6fe;
+        --accent-start-soft: #0c4a6e;
+        --accent-end-soft: #713f12;
+        --accent-glow: rgb(196 181 253 / 0.14);
+        --empty: #64748b;
+        --shadow: 0 1px 2px rgb(0 0 0 / 0.2), 0 10px 28px rgb(0 0 0 / 0.16);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .day { transition: none; }
+    }
+  </style>
 </head>
 <body>
   <main>
     <header>
       <h1>Particle</h1>
-      <p>Party Cal: availability unavailable.</p>
+      <p class="intro">Party Cal: availability during the next 4 weeks</p>
     </header>
-    <section>
-      <h2>Calendar not available</h2>
-      <p>Particle is not being shared at the moment.</p>
-    </section>
+
+          <section class="disabled">
+        <h2>Calendar not available</h2>
+        <p>Particle is not being shared at the moment.</p>
+      </section>
+
+    <footer>Particle · last updated: 30 Aug 2026, 11:35 CEST</footer>
   </main>
 </body>
 </html>
