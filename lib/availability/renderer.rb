@@ -48,7 +48,17 @@ module Availability
       end
 
       def format_date(date)
-        "#{date.strftime('%A')}, #{date.day} #{date.strftime('%B')}"
+        "#{date.strftime('%A')}, #{date.day} #{date.strftime('%B %Y')}"
+      end
+
+      def format_compact_date(date)
+        date.strftime('%a %-d %b')
+      end
+
+      def format_week_label(week)
+        first_date = week.compact.first.date
+        monday = first_date - (first_date.cwday - 1)
+        "Week of #{monday.day} #{monday.strftime('%B %Y')}"
       end
 
       def format_time(time)
@@ -71,13 +81,21 @@ module Availability
         @timezone.to_local(@generated_at.getutc).strftime('%-d %b %Y, %H:%M %Z')
       end
 
+      def timezone_name
+        @timezone.identifier
+      end
+
       def period_description
-        return 'during the next day' if @days_to_show == 1
+        final_date = @today + @days_to_show - 1
+        return @today.strftime('%-d %b %Y') if final_date == @today
 
-        weeks, remaining_days = @days_to_show.divmod(7)
-        return "during the next #{weeks} #{weeks == 1 ? 'week' : 'weeks'}" if remaining_days.zero?
+        start_with_year = @today.strftime('%-d %b %Y')
+        final_with_year = final_date.strftime('%-d %b %Y')
+        return "#{start_with_year}–#{final_with_year}" if @today.year != final_date.year
 
-        "during the next #{@days_to_show} days"
+        return "#{@today.day}–#{final_with_year}" if @today.month == final_date.month
+
+        "#{@today.strftime('%-d %b')}–#{final_with_year}"
       end
     end
   end

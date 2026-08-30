@@ -6,7 +6,7 @@
   <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
   <meta name="referrer" content="no-referrer">
   <meta name="color-scheme" content="light dark">
-  <title>Particle — from Party Cal</title>
+  <title>Particle — Availability calendar</title>
   <style>
     :root {
       color-scheme: light dark;
@@ -19,11 +19,13 @@
       --accent-start: #7dd3fc;
       --accent-end: #fef08a;
       --accent-gradient: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-      --accent-strong: #075985;
-      --accent-start-soft: #e0f2fe;
-      --accent-end-soft: #fef9c3;
       --accent-glow: rgb(14 165 233 / 0.13);
-      --empty: #94a3b8;
+      --slot-background: #eff6ff;
+      --slot-border: #bfdbfe;
+      --slot-text: #075985;
+      --today-label-background: #e0f2fe;
+      --today-label-text: #075985;
+      --empty: #526175;
       --shadow: 0 1px 2px rgb(15 23 42 / 0.04), 0 8px 24px rgb(15 23 42 / 0.04);
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
@@ -59,11 +61,42 @@
       color: var(--accent);
     }
 
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
     .intro {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.12rem;
       max-width: 38rem;
       margin: 0.85rem 0 0;
+    }
+
+    .subtitle-name {
+      color: var(--text);
+      font-size: 1.12rem;
+      font-weight: 760;
+      letter-spacing: -0.02em;
+    }
+
+    .calendar-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.25rem 0.45rem;
+      margin: 0.55rem 0 0;
       color: var(--muted);
-      font-size: 1.05rem;
+      font-size: 0.86rem;
+      font-variant-numeric: tabular-nums;
     }
 
     .week + .week { margin-top: 0.65rem; }
@@ -106,21 +139,48 @@
       border-color: transparent;
       background: linear-gradient(var(--surface), var(--surface)) padding-box,
         var(--accent-gradient) border-box;
-      box-shadow: 0 0 0 1px var(--accent), 0 12px 28px var(--accent-glow);
+      box-shadow: 0 10px 24px var(--accent-glow);
     }
 
     .date {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
       margin: 0 0 0.85rem;
-      font-size: 0.9rem;
       font-weight: 690;
       line-height: 1.25;
     }
 
+    .date-desktop {
+      display: flex;
+      align-items: baseline;
+      gap: 0.32rem;
+    }
+
+    .date-number {
+      font-size: 1.35rem;
+      letter-spacing: -0.03em;
+    }
+
+    .date-month {
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 720;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .date-mobile { display: none; }
+
     .today-label {
-      display: inline-block;
-      margin-top: 0.3rem;
-      color: var(--accent);
-      font-size: 0.68rem;
+      display: inline-flex;
+      margin-top: 0.38rem;
+      padding: 0.18rem 0.4rem;
+      border-radius: 999px;
+      background: var(--today-label-background);
+      color: var(--today-label-text);
+      font-size: 0.64rem;
+      font-weight: 760;
       letter-spacing: 0.06em;
       text-transform: uppercase;
     }
@@ -136,9 +196,10 @@
 
     .slot {
       padding: 0.42rem 0.55rem;
+      border: 1px solid var(--slot-border);
       border-radius: 0.45rem;
-      background: linear-gradient(135deg, var(--accent-start-soft), var(--accent-end-soft));
-      color: var(--accent-strong);
+      background: var(--slot-background);
+      color: var(--slot-text);
       font-size: 0.84rem;
       font-variant-numeric: tabular-nums;
       font-weight: 700;
@@ -188,13 +249,36 @@
     }
 
     .github-icon {
-      width: 1rem;
-      height: 1rem;
+      width: 1em;
+      height: 1em;
       fill: currentColor;
     }
 
-    @media (max-width: 58rem) {
+    @media (max-width: 68rem) {
       main { padding-top: 2.25rem; }
+      .weekday-header,
+      .days { gap: 0.35rem; }
+      .weekday-header span {
+        padding: 0 0.45rem;
+        font-size: 0.62rem;
+      }
+      .week + .week { margin-top: 0.45rem; }
+      .day {
+        min-height: 8rem;
+        padding: 0.45rem;
+      }
+      .date { margin-bottom: 0.55rem; }
+      .date-number { font-size: 1rem; }
+      .date-month { font-size: 0.6rem; }
+      .slots { gap: 0.3rem; }
+      .slot {
+        padding: 0.3rem;
+        font-size: 0.67rem;
+      }
+      .none { font-size: 0.67rem; }
+    }
+
+    @media (max-width: 46rem) {
       .weekday-header { display: none; }
       .week + .week { margin-top: 0.5rem; }
       .days { grid-template-columns: 1fr; gap: 0.5rem; }
@@ -208,8 +292,22 @@
         padding: 0.9rem;
       }
       .date { margin: 0; white-space: nowrap; }
-      .today-label { display: block; }
+      .date-desktop { display: none; }
+      .date-mobile { display: inline; font-size: 0.88rem; }
       .slots { justify-content: flex-end; }
+      .slot {
+        padding: 0.42rem 0.55rem;
+        font-size: 0.84rem;
+      }
+      .none { font-size: 0.84rem; }
+    }
+
+    @media (max-width: 26rem) {
+      .day {
+        grid-template-columns: 1fr;
+        row-gap: 0.65rem;
+      }
+      .slots { justify-content: flex-start; }
     }
 
     @media (prefers-color-scheme: dark) {
@@ -222,11 +320,13 @@
         --accent: #7dd3fc;
         --accent-start: #7dd3fc;
         --accent-end: #fef08a;
-        --accent-strong: #bae6fd;
-        --accent-start-soft: #0c4a6e;
-        --accent-end-soft: #713f12;
         --accent-glow: rgb(125 211 252 / 0.14);
-        --empty: #64748b;
+        --slot-background: #082f49;
+        --slot-border: #0e7490;
+        --slot-text: #bae6fd;
+        --today-label-background: #0c4a6e;
+        --today-label-text: #bae6fd;
+        --empty: #a3aec0;
         --shadow: 0 1px 2px rgb(0 0 0 / 0.2), 0 10px 28px rgb(0 0 0 / 0.16);
       }
     }
@@ -237,13 +337,19 @@
   <main>
     <header>
       <h1>Particle</h1>
-      <p class="intro">Party Cal: availability during the next 4 weeks</p>
-    </header>
+      <p class="intro">
+        <span class="subtitle-name">Availability calendar</span>
+      </p>
+              <p class="calendar-meta">
+          <span>Times shown in Europe/Berlin</span>
+        </p>
+          </header>
 
           <div class="calendar">
         <div class="weekday-header" aria-hidden="true">
           <span>mon</span><span>tue</span><span>wed</span><span>thu</span><span>fri</span><span>sat</span><span>sun</span>        </div>
-                  <section class="week" aria-label="Week 1">
+                  <section class="week" aria-labelledby="week-1-heading">
+            <h2 class="sr-only" id="week-1-heading">Week of 24 August 2026</h2>
             <div class="days">
                                                 <div class="day placeholder" data-weekday="monday" aria-hidden="true"></div>
                                                                 <div class="day placeholder" data-weekday="tuesday" aria-hidden="true"></div>
@@ -254,7 +360,12 @@
                                                                 <article class="day today"
                            data-weekday="sunday">
                     <h3 class="date">
-                      Sunday, 30 August
+                      <span class="date-desktop" aria-hidden="true">
+                        <span class="date-number">30</span>
+                        <span class="date-month">Aug</span>
+                      </span>
+                      <span class="date-mobile" aria-hidden="true">Sun 30 Aug</span>
+                      <span class="sr-only">Sunday, 30 August 2026</span>
                       <span class="today-label">Today</span>                    </h3>
                                           <ul class="slots" aria-label="Available times">
                                                   <li class="slot">09:00–00:00</li>
@@ -262,12 +373,18 @@
                                       </article>
                                           </div>
           </section>
-                  <section class="week" aria-label="Week 2">
+                  <section class="week" aria-labelledby="week-2-heading">
+            <h2 class="sr-only" id="week-2-heading">Week of 31 August 2026</h2>
             <div class="days">
                                                 <article class="day"
                            data-weekday="monday">
                     <h3 class="date">
-                      Monday, 31 August
+                      <span class="date-desktop" aria-hidden="true">
+                        <span class="date-number">31</span>
+                        <span class="date-month">Aug</span>
+                      </span>
+                      <span class="date-mobile" aria-hidden="true">Mon 31 Aug</span>
+                      <span class="sr-only">Monday, 31 August 2026</span>
                                           </h3>
                                           <ul class="slots" aria-label="Available times">
                                                   <li class="slot">09:00–00:00</li>
@@ -276,7 +393,12 @@
                                                                 <article class="day"
                            data-weekday="tuesday">
                     <h3 class="date">
-                      Tuesday, 1 September
+                      <span class="date-desktop" aria-hidden="true">
+                        <span class="date-number">1</span>
+                        <span class="date-month">Sep</span>
+                      </span>
+                      <span class="date-mobile" aria-hidden="true">Tue 1 Sep</span>
+                      <span class="sr-only">Tuesday, 1 September 2026</span>
                                           </h3>
                                           <ul class="slots" aria-label="Available times">
                                                   <li class="slot">09:00–00:00</li>
@@ -285,7 +407,12 @@
                                                                 <article class="day"
                            data-weekday="wednesday">
                     <h3 class="date">
-                      Wednesday, 2 September
+                      <span class="date-desktop" aria-hidden="true">
+                        <span class="date-number">2</span>
+                        <span class="date-month">Sep</span>
+                      </span>
+                      <span class="date-mobile" aria-hidden="true">Wed 2 Sep</span>
+                      <span class="sr-only">Wednesday, 2 September 2026</span>
                                           </h3>
                                           <ul class="slots" aria-label="Available times">
                                                   <li class="slot">09:00–00:00</li>
@@ -294,7 +421,12 @@
                                                                 <article class="day"
                            data-weekday="thursday">
                     <h3 class="date">
-                      Thursday, 3 September
+                      <span class="date-desktop" aria-hidden="true">
+                        <span class="date-number">3</span>
+                        <span class="date-month">Sep</span>
+                      </span>
+                      <span class="date-mobile" aria-hidden="true">Thu 3 Sep</span>
+                      <span class="sr-only">Thursday, 3 September 2026</span>
                                           </h3>
                                           <ul class="slots" aria-label="Available times">
                                                   <li class="slot">09:00–00:00</li>
@@ -303,7 +435,12 @@
                                                                 <article class="day"
                            data-weekday="friday">
                     <h3 class="date">
-                      Friday, 4 September
+                      <span class="date-desktop" aria-hidden="true">
+                        <span class="date-number">4</span>
+                        <span class="date-month">Sep</span>
+                      </span>
+                      <span class="date-mobile" aria-hidden="true">Fri 4 Sep</span>
+                      <span class="sr-only">Friday, 4 September 2026</span>
                                           </h3>
                                           <ul class="slots" aria-label="Available times">
                                                   <li class="slot">09:00–00:00</li>
@@ -312,7 +449,12 @@
                                                                 <article class="day"
                            data-weekday="saturday">
                     <h3 class="date">
-                      Saturday, 5 September
+                      <span class="date-desktop" aria-hidden="true">
+                        <span class="date-number">5</span>
+                        <span class="date-month">Sep</span>
+                      </span>
+                      <span class="date-mobile" aria-hidden="true">Sat 5 Sep</span>
+                      <span class="sr-only">Saturday, 5 September 2026</span>
                                           </h3>
                                           <ul class="slots" aria-label="Available times">
                                                   <li class="slot">09:00–10:00</li>
@@ -321,114 +463,186 @@
                                                                 <article class="day empty"
                            data-weekday="sunday">
                     <h3 class="date">
-                      Sunday, 6 September
+                      <span class="date-desktop" aria-hidden="true">
+                        <span class="date-number">6</span>
+                        <span class="date-month">Sep</span>
+                      </span>
+                      <span class="date-mobile" aria-hidden="true">Sun 6 Sep</span>
+                      <span class="sr-only">Sunday, 6 September 2026</span>
                                           </h3>
                                           <p class="none">No availability</p>
                                       </article>
                                           </div>
           </section>
-                  <section class="week" aria-label="Week 3">
+                  <section class="week" aria-labelledby="week-3-heading">
+            <h2 class="sr-only" id="week-3-heading">Week of 7 September 2026</h2>
             <div class="days">
                                                 <article class="day empty"
                            data-weekday="monday">
                     <h3 class="date">
-                      Monday, 7 September
+                      <span class="date-desktop" aria-hidden="true">
+                        <span class="date-number">7</span>
+                        <span class="date-month">Sep</span>
+                      </span>
+                      <span class="date-mobile" aria-hidden="true">Mon 7 Sep</span>
+                      <span class="sr-only">Monday, 7 September 2026</span>
                                           </h3>
                                           <p class="none">No availability</p>
                                       </article>
                                                                 <article class="day empty"
                            data-weekday="tuesday">
                     <h3 class="date">
-                      Tuesday, 8 September
+                      <span class="date-desktop" aria-hidden="true">
+                        <span class="date-number">8</span>
+                        <span class="date-month">Sep</span>
+                      </span>
+                      <span class="date-mobile" aria-hidden="true">Tue 8 Sep</span>
+                      <span class="sr-only">Tuesday, 8 September 2026</span>
                                           </h3>
                                           <p class="none">No availability</p>
                                       </article>
                                                                 <article class="day empty"
                            data-weekday="wednesday">
                     <h3 class="date">
-                      Wednesday, 9 September
+                      <span class="date-desktop" aria-hidden="true">
+                        <span class="date-number">9</span>
+                        <span class="date-month">Sep</span>
+                      </span>
+                      <span class="date-mobile" aria-hidden="true">Wed 9 Sep</span>
+                      <span class="sr-only">Wednesday, 9 September 2026</span>
                                           </h3>
                                           <p class="none">No availability</p>
                                       </article>
                                                                 <article class="day empty"
                            data-weekday="thursday">
                     <h3 class="date">
-                      Thursday, 10 September
+                      <span class="date-desktop" aria-hidden="true">
+                        <span class="date-number">10</span>
+                        <span class="date-month">Sep</span>
+                      </span>
+                      <span class="date-mobile" aria-hidden="true">Thu 10 Sep</span>
+                      <span class="sr-only">Thursday, 10 September 2026</span>
                                           </h3>
                                           <p class="none">No availability</p>
                                       </article>
                                                                 <article class="day empty"
                            data-weekday="friday">
                     <h3 class="date">
-                      Friday, 11 September
+                      <span class="date-desktop" aria-hidden="true">
+                        <span class="date-number">11</span>
+                        <span class="date-month">Sep</span>
+                      </span>
+                      <span class="date-mobile" aria-hidden="true">Fri 11 Sep</span>
+                      <span class="sr-only">Friday, 11 September 2026</span>
                                           </h3>
                                           <p class="none">No availability</p>
                                       </article>
                                                                 <article class="day empty"
                            data-weekday="saturday">
                     <h3 class="date">
-                      Saturday, 12 September
+                      <span class="date-desktop" aria-hidden="true">
+                        <span class="date-number">12</span>
+                        <span class="date-month">Sep</span>
+                      </span>
+                      <span class="date-mobile" aria-hidden="true">Sat 12 Sep</span>
+                      <span class="sr-only">Saturday, 12 September 2026</span>
                                           </h3>
                                           <p class="none">No availability</p>
                                       </article>
                                                                 <article class="day empty"
                            data-weekday="sunday">
                     <h3 class="date">
-                      Sunday, 13 September
+                      <span class="date-desktop" aria-hidden="true">
+                        <span class="date-number">13</span>
+                        <span class="date-month">Sep</span>
+                      </span>
+                      <span class="date-mobile" aria-hidden="true">Sun 13 Sep</span>
+                      <span class="sr-only">Sunday, 13 September 2026</span>
                                           </h3>
                                           <p class="none">No availability</p>
                                       </article>
                                           </div>
           </section>
-                  <section class="week" aria-label="Week 4">
+                  <section class="week" aria-labelledby="week-4-heading">
+            <h2 class="sr-only" id="week-4-heading">Week of 14 September 2026</h2>
             <div class="days">
                                                 <article class="day empty"
                            data-weekday="monday">
                     <h3 class="date">
-                      Monday, 14 September
+                      <span class="date-desktop" aria-hidden="true">
+                        <span class="date-number">14</span>
+                        <span class="date-month">Sep</span>
+                      </span>
+                      <span class="date-mobile" aria-hidden="true">Mon 14 Sep</span>
+                      <span class="sr-only">Monday, 14 September 2026</span>
                                           </h3>
                                           <p class="none">No availability</p>
                                       </article>
                                                                 <article class="day"
                            data-weekday="tuesday">
                     <h3 class="date">
-                      Tuesday, 15 September
+                      <span class="date-desktop" aria-hidden="true">
+                        <span class="date-number">15</span>
+                        <span class="date-month">Sep</span>
+                      </span>
+                      <span class="date-mobile" aria-hidden="true">Tue 15 Sep</span>
+                      <span class="sr-only">Tuesday, 15 September 2026</span>
                                           </h3>
                                           <ul class="slots" aria-label="Available times">
-                                                  <li class="slot">11:00–00:00</li>
+                                                  <li class="slot">18:00–00:00</li>
                                               </ul>
                                       </article>
                                                                 <article class="day"
                            data-weekday="wednesday">
                     <h3 class="date">
-                      Wednesday, 16 September
+                      <span class="date-desktop" aria-hidden="true">
+                        <span class="date-number">16</span>
+                        <span class="date-month">Sep</span>
+                      </span>
+                      <span class="date-mobile" aria-hidden="true">Wed 16 Sep</span>
+                      <span class="sr-only">Wednesday, 16 September 2026</span>
                                           </h3>
                                           <ul class="slots" aria-label="Available times">
-                                                  <li class="slot">09:00–00:00</li>
+                                                  <li class="slot">18:00–00:00</li>
                                               </ul>
                                       </article>
                                                                 <article class="day"
                            data-weekday="thursday">
                     <h3 class="date">
-                      Thursday, 17 September
+                      <span class="date-desktop" aria-hidden="true">
+                        <span class="date-number">17</span>
+                        <span class="date-month">Sep</span>
+                      </span>
+                      <span class="date-mobile" aria-hidden="true">Thu 17 Sep</span>
+                      <span class="sr-only">Thursday, 17 September 2026</span>
                                           </h3>
                                           <ul class="slots" aria-label="Available times">
-                                                  <li class="slot">09:00–00:00</li>
+                                                  <li class="slot">18:00–00:00</li>
                                               </ul>
                                       </article>
                                                                 <article class="day"
                            data-weekday="friday">
                     <h3 class="date">
-                      Friday, 18 September
+                      <span class="date-desktop" aria-hidden="true">
+                        <span class="date-number">18</span>
+                        <span class="date-month">Sep</span>
+                      </span>
+                      <span class="date-mobile" aria-hidden="true">Fri 18 Sep</span>
+                      <span class="sr-only">Friday, 18 September 2026</span>
                                           </h3>
                                           <ul class="slots" aria-label="Available times">
-                                                  <li class="slot">09:00–00:00</li>
+                                                  <li class="slot">18:00–00:00</li>
                                               </ul>
                                       </article>
                                                                 <article class="day"
                            data-weekday="saturday">
                     <h3 class="date">
-                      Saturday, 19 September
+                      <span class="date-desktop" aria-hidden="true">
+                        <span class="date-number">19</span>
+                        <span class="date-month">Sep</span>
+                      </span>
+                      <span class="date-mobile" aria-hidden="true">Sat 19 Sep</span>
+                      <span class="sr-only">Saturday, 19 September 2026</span>
                                           </h3>
                                           <ul class="slots" aria-label="Available times">
                                                   <li class="slot">09:00–00:00</li>
@@ -437,7 +651,12 @@
                                                                 <article class="day"
                            data-weekday="sunday">
                     <h3 class="date">
-                      Sunday, 20 September
+                      <span class="date-desktop" aria-hidden="true">
+                        <span class="date-number">20</span>
+                        <span class="date-month">Sep</span>
+                      </span>
+                      <span class="date-mobile" aria-hidden="true">Sun 20 Sep</span>
+                      <span class="sr-only">Sunday, 20 September 2026</span>
                                           </h3>
                                           <ul class="slots" aria-label="Available times">
                                                   <li class="slot">09:00–00:00</li>
@@ -445,53 +664,84 @@
                                       </article>
                                           </div>
           </section>
-                  <section class="week" aria-label="Week 5">
+                  <section class="week" aria-labelledby="week-5-heading">
+            <h2 class="sr-only" id="week-5-heading">Week of 21 September 2026</h2>
             <div class="days">
                                                 <article class="day"
                            data-weekday="monday">
                     <h3 class="date">
-                      Monday, 21 September
+                      <span class="date-desktop" aria-hidden="true">
+                        <span class="date-number">21</span>
+                        <span class="date-month">Sep</span>
+                      </span>
+                      <span class="date-mobile" aria-hidden="true">Mon 21 Sep</span>
+                      <span class="sr-only">Monday, 21 September 2026</span>
                                           </h3>
                                           <ul class="slots" aria-label="Available times">
-                                                  <li class="slot">09:00–00:00</li>
+                                                  <li class="slot">18:00–00:00</li>
                                               </ul>
                                       </article>
                                                                 <article class="day"
                            data-weekday="tuesday">
                     <h3 class="date">
-                      Tuesday, 22 September
+                      <span class="date-desktop" aria-hidden="true">
+                        <span class="date-number">22</span>
+                        <span class="date-month">Sep</span>
+                      </span>
+                      <span class="date-mobile" aria-hidden="true">Tue 22 Sep</span>
+                      <span class="sr-only">Tuesday, 22 September 2026</span>
                                           </h3>
                                           <ul class="slots" aria-label="Available times">
-                                                  <li class="slot">09:00–00:00</li>
+                                                  <li class="slot">18:00–00:00</li>
                                               </ul>
                                       </article>
                                                                 <article class="day"
                            data-weekday="wednesday">
                     <h3 class="date">
-                      Wednesday, 23 September
+                      <span class="date-desktop" aria-hidden="true">
+                        <span class="date-number">23</span>
+                        <span class="date-month">Sep</span>
+                      </span>
+                      <span class="date-mobile" aria-hidden="true">Wed 23 Sep</span>
+                      <span class="sr-only">Wednesday, 23 September 2026</span>
                                           </h3>
                                           <ul class="slots" aria-label="Available times">
-                                                  <li class="slot">09:00–00:00</li>
+                                                  <li class="slot">18:00–00:00</li>
                                               </ul>
                                       </article>
                                                                 <article class="day empty"
                            data-weekday="thursday">
                     <h3 class="date">
-                      Thursday, 24 September
+                      <span class="date-desktop" aria-hidden="true">
+                        <span class="date-number">24</span>
+                        <span class="date-month">Sep</span>
+                      </span>
+                      <span class="date-mobile" aria-hidden="true">Thu 24 Sep</span>
+                      <span class="sr-only">Thursday, 24 September 2026</span>
                                           </h3>
                                           <p class="none">No availability</p>
                                       </article>
                                                                 <article class="day empty"
                            data-weekday="friday">
                     <h3 class="date">
-                      Friday, 25 September
+                      <span class="date-desktop" aria-hidden="true">
+                        <span class="date-number">25</span>
+                        <span class="date-month">Sep</span>
+                      </span>
+                      <span class="date-mobile" aria-hidden="true">Fri 25 Sep</span>
+                      <span class="sr-only">Friday, 25 September 2026</span>
                                           </h3>
                                           <p class="none">No availability</p>
                                       </article>
                                                                 <article class="day"
                            data-weekday="saturday">
                     <h3 class="date">
-                      Saturday, 26 September
+                      <span class="date-desktop" aria-hidden="true">
+                        <span class="date-number">26</span>
+                        <span class="date-month">Sep</span>
+                      </span>
+                      <span class="date-mobile" aria-hidden="true">Sat 26 Sep</span>
+                      <span class="sr-only">Saturday, 26 September 2026</span>
                                           </h3>
                                           <ul class="slots" aria-label="Available times">
                                                   <li class="slot">09:00–00:00</li>
@@ -510,7 +760,7 @@
         <span>Particle</span>
       </a>
       <span aria-hidden="true">·</span>
-      <span>last updated: 30 Aug 2026, 11:56 CEST</span>
+      <span>last updated: 30 Aug 2026, 14:38 CEST</span>
     </footer>
   </main>
 </body>

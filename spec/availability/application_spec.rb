@@ -59,40 +59,64 @@ RSpec.describe Availability::Application do
         expect(run_application).to be(true)
       end
 
-      it 'renders availability and the configured range', :aggregate_failures do
+      it 'renders availability without a descriptive or date-range subtitle', :aggregate_failures do
         html = File.read(paths.fetch(:index))
         expect(html).to include(
-          '09:00–10:00',
-          '11:30–22:00',
-          'Party Cal: availability during the next 2 days',
+          '<title>Particle — Availability calendar</title>',
+          '09:00–10:00', '11:30–22:00', '<span class="subtitle-name">Availability calendar</span>',
+          'Times shown in Europe/Berlin',
           '<a class="repository-link" href="https://github.com/mendab1e/particle" aria-label="Particle on GitHub">',
-          '<span>Particle</span>',
-          'last updated:'
+          '<span>Particle</span>', 'last updated:'
+        )
+        expect(html).not_to include('The free parts of my calendar.', '26–27 Aug 2026')
+      end
+
+      it 'renders scannable Monday-first calendar rows with compact dates', :aggregate_failures do
+        html = File.read(paths.fetch(:index))
+
+        expect(html.index('data-weekday="monday"')).to be < html.index('Wednesday, 26 August 2026')
+        expect(html).to include(
+          '<span class="date-mobile" aria-hidden="true">Wed 26 Aug</span>',
+          '<span class="sr-only">Wednesday, 26 August 2026</span>'
         )
       end
 
-      it 'renders Monday-first calendar rows with rounded gradient-accented card styling', :aggregate_failures do
+      it 'uses restrained availability styling', :aggregate_failures do
         html = File.read(paths.fetch(:index))
 
-        expect(html.index('data-weekday="monday"')).to be < html.index('Wednesday, 26 August')
         expect(html).to include(
-          'min-height: 100vh',
-          '--accent: #0284c7',
-          '--accent-start: #7dd3fc',
-          '--accent-end: #fef08a',
-          '--accent-gradient: linear-gradient(135deg, var(--accent-start), var(--accent-end))'
+          'min-height: 100vh', '--accent: #0284c7', '--slot-background: #eff6ff',
+          '--slot-border: #bfdbfe', '--empty: #526175', 'border-radius: 0.85rem'
         )
-        expect(html).to include('border-radius: 0.85rem')
+        expect(html).not_to include('--accent-start-soft')
       end
 
-      it 'keeps mobile dates on one line', :aggregate_failures do
+      it 'keeps a compact grid on tablets', :aggregate_failures do
         html = File.read(paths.fetch(:index))
 
         expect(html).to include(
+          '@media (max-width: 68rem)',
+          'font-size: 0.67rem'
+        )
+      end
+
+      it 'stacks cards on phones', :aggregate_failures do
+        html = File.read(paths.fetch(:index))
+
+        expect(html).to include(
+          '@media (max-width: 46rem)',
           'grid-template-columns: max-content minmax(0, 1fr)',
           'column-gap: 0.5rem',
-          '.date { margin: 0; white-space: nowrap; }',
-          '.today-label { display: block; }'
+          '@media (max-width: 26rem)',
+          'grid-template-columns: 1fr',
+          '.slots { justify-content: flex-start; }'
+        )
+      end
+
+      it 'provides week-level headings for assistive navigation' do
+        expect(File.read(paths.fetch(:index))).to include(
+          '<section class="week" aria-labelledby="week-1-heading">',
+          '<h2 class="sr-only" id="week-1-heading">Week of 24 August 2026</h2>'
         )
       end
 
