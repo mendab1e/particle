@@ -254,6 +254,17 @@ RSpec.describe Availability::Application do
         expect(nginx_configuration).not_to include('location = /a8f2c9e71d4b/robots.txt')
       end
 
+      it 'serves the page through an internal index location', :aggregate_failures do
+        expect(nginx_configuration).to include(
+          'location = /a8f2c9e71d4b/',
+          'alias /opt/availability/public/',
+          'index index.html;',
+          'location = /a8f2c9e71d4b/index.html',
+          'internal;',
+          'alias /opt/availability/public/index.html'
+        )
+      end
+
       it 'exposes only the favicon below the private path' do
         expect(nginx_configuration).to include(
           'location = /a8f2c9e71d4b/favicon.svg',

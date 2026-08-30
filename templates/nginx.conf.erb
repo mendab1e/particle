@@ -19,12 +19,20 @@ server {
     }
 
     location = <%= @url_path %> {
-        alias "<%= escaped_output_dir %>/index.html";
+        alias "<%= escaped_output_dir %>/";
+        index index.html;
         default_type text/html;
 
         # For enforced privacy, create this file with `htpasswd` and uncomment:
         # auth_basic "Private availability";
         # auth_basic_user_file /etc/nginx/particle.htpasswd;
+    }
+
+    # The index module redirects internally here after verifying that the file exists.
+    location = <%= @url_path %>index.html {
+        internal;
+        alias "<%= escaped_output_dir %>/index.html";
+        default_type text/html;
     }
 
     location = <%= @url_path %>favicon.svg {

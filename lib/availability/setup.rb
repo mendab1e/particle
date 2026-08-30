@@ -9,21 +9,23 @@ module Availability
     SERVER_NAME_PATTERN = /\A[a-zA-Z0-9.-]+\z/
     URL_PATH_PATTERN = %r{\A/[a-zA-Z0-9_-]+/\z}
 
-    def initialize(config_path:, nginx_path:, output_dir:, server_name:, url_path:)
+    def initialize(config_path:, nginx_path:, output_dir:, log_dir:, server_name:, url_path:)
       @config_path = File.expand_path(config_path)
       @nginx_path = File.expand_path(nginx_path)
       @output_dir = File.expand_path(output_dir)
+      @log_dir = File.expand_path(log_dir)
       @server_name = server_name
       @url_path = url_path
     end
 
-    attr_reader :config_path, :nginx_path, :output_dir
+    attr_reader :config_path, :nginx_path, :output_dir, :log_dir
 
     def run
       validate!
       ensure_targets_are_available!
       create_files
       FileUtils.mkdir_p(output_dir)
+      FileUtils.mkdir_p(log_dir)
       true
     rescue SystemCallError => e
       cleanup_created_files

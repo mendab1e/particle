@@ -53,7 +53,7 @@ Create a starter configuration, an Nginx server-block sample, and the static out
 particle setup
 ```
 
-By default this writes `particle.yml` with mode `0600`, `particle.nginx.conf`, and `public/` in the current directory. It generates a long random URL path for the Nginx sample and refuses to replace either setup file if it already exists.
+By default this writes `particle.yml` with mode `0600`, `particle.nginx.conf`, `public/`, and `log/` in the current directory. It generates a long random URL path for the Nginx sample and refuses to replace either setup file if it already exists.
 
 Customize every destination when needed:
 
@@ -235,7 +235,6 @@ Create a dedicated account or deploy as an unprivileged service user, install Ru
 ```bash
 gem install particle-calendar
 cd /opt/particle
-mkdir -p log
 particle setup --server-name calendar.example.com
 # Edit particle.yml and replace the example calendar placeholders.
 particle generate --config /opt/particle/particle.yml --output /opt/particle/public
@@ -297,6 +296,7 @@ The repository includes a [`deploy/availability.logrotate`](deploy/availability.
 - **Calendar exceeded a safe limit:** reduce an unusually large displayed range or inspect the feed privately for excessive event counts or dense recurrence rules. The generator intentionally fails before publishing rather than risking resource exhaustion.
 - **Old update timestamp:** inspect cron logs. A stale page usually means a later run failed safely.
 - **Permission denied while publishing:** the generator needs write permission on `public/`; Nginx needs read permission only.
+- **Nginx reports that `index.htmlindex.html` is not a directory:** replace the installed page locations with the current `particle.nginx.conf` example, then validate and reload Nginx. Older examples pointed a trailing-slash location directly at the file, causing Nginx's index module to append `index.html` twice.
 
 ## Known limits
 

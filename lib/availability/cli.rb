@@ -113,6 +113,7 @@ module Availability
         config_path: File.join(@working_directory, 'particle.yml'),
         nginx_path: File.join(@working_directory, 'particle.nginx.conf'),
         output_dir: File.join(@working_directory, 'public'),
+        log_dir: File.join(@working_directory, 'log'),
         server_name: 'example.com',
         url_path: "/#{@random_path.call}/"
       }
@@ -150,6 +151,7 @@ module Availability
       @output.puts("Created #{setup.config_path} (mode 0600)")
       @output.puts("Created #{setup.nginx_path}")
       @output.puts("Created output directory #{setup.output_dir}")
+      @output.puts("Created log directory #{setup.log_dir}")
       @output.puts('Next: edit the config, run particle generate, then review and install the Nginx file.')
     end
 

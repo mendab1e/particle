@@ -40,7 +40,13 @@ RSpec.describe Availability::CLI do
         nginx = File.read(File.join(directory, 'particle.nginx.conf'))
 
         expect(nginx).to include('server_name calendar.example.com;', 'location = /secret-path/')
-        expect(nginx).to include(%(alias "#{directory}/public/index.html";))
+        expect(nginx).to include(
+          %(alias "#{directory}/public/";),
+          'index index.html;',
+          'location = /secret-path/index.html {',
+          'internal;',
+          %(alias "#{directory}/public/index.html";)
+        )
         expect(nginx).not_to include('<%=')
       end
 
@@ -48,8 +54,16 @@ RSpec.describe Availability::CLI do
         expect(File).to be_directory(File.join(directory, 'public'))
       end
 
+      it 'creates the log directory' do
+        expect(File).to be_directory(File.join(directory, 'log'))
+      end
+
       it 'reports the created files without printing configuration contents', :aggregate_failures do
-        expect(output.string).to include('particle.yml (mode 0600)', 'particle.nginx.conf')
+        expect(output.string).to include(
+          'particle.yml (mode 0600)',
+          'particle.nginx.conf',
+          "Created log directory #{directory}/log"
+        )
         expect(output.string).not_to include('CALENDAR_MAIN_URL')
       end
     end
