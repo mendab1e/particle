@@ -311,3 +311,9 @@ The repository includes a [`deploy/availability.logrotate`](deploy/availability.
 The generator supports normal timed, all-day, overnight, multi-day, recurring, `EXDATE`, `RDATE`, and exact detached `RECURRENCE-ID` events. Floating timed events without a `TZID` are interpreted in the configured timezone. Custom `VTIMEZONE` definitions are used when the parser can resolve them; events with unresolved timezone identifiers are treated as malformed and ignored. Rare recurrence features such as `RANGE=THISANDFUTURE` and malformed feed-level structure may still require feed-specific work.
 
 HTTP validators (`ETag` and `Last-Modified`) are not persisted in this intentionally stateless version. Every successful run downloads every feed, prioritizing freshness and safe all-or-nothing generation.
+
+## License
+
+Copyright (C) 2026 Timur Yanberdin.
+
+Particle is free software licensed under the [GNU General Public License, version 3 only](LICENSE).

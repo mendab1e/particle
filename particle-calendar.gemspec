@@ -5,20 +5,21 @@ require_relative 'lib/availability/version'
 Gem::Specification.new do |spec|
   spec.name = 'particle-calendar'
   spec.version = Availability::VERSION
-  spec.authors = ['Timur']
+  spec.authors = ['Timur Yanberdin']
   spec.email = ['yanberdint@gmail.com']
 
   spec.summary = 'Publish private calendar availability as static HTML'
   spec.description = 'A command-line static-site generator that subtracts private iCalendar busy time ' \
                      'from configured availability.'
   spec.homepage = 'https://github.com/mendab1e/particle'
-  spec.license = nil
+  spec.license = 'GPL-3.0-only'
   spec.required_ruby_version = '>= 3.4.0'
 
   spec.metadata['source_code_uri'] = spec.homepage
   spec.metadata['rubygems_mfa_required'] = 'true'
 
   spec.files = Dir[
+    'LICENSE',
     'README.md',
     'assets/favicon.svg',
     'config/availability.example.yml',

@@ -15,12 +15,17 @@ RSpec.describe Gem::Specification do
 
   it 'packages every runtime asset', :aggregate_failures do
     expect(specification.files).to include(
+      'LICENSE',
       'assets/favicon.svg',
       'config/availability.example.yml',
       'exe/particle',
       'templates/index.html.erb',
       'templates/nginx.conf.erb'
     )
+  end
+
+  it 'is licensed under GPL version 3 only' do
+    expect(specification.license).to eq('GPL-3.0-only')
   end
 
   it 'does not package production configuration or generated output', :aggregate_failures do
