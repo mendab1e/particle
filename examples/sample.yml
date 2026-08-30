@@ -1,0 +1,23 @@
+enabled: true
+timezone: Europe/Berlin
+calendar_urls:
+  - https://calendar.example/sample.ics
+days_to_show: 14
+minimum_slot_minutes: 30
+event_buffer:
+  before_minutes: 0
+  after_minutes: 0
+availability:
+  default:
+    - start: "09:00"
+      end: "12:00"
+    - start: "13:00"
+      end: "17:00"
+  monday:
+    unavailable: true
+  saturday:
+    - start: "11:00"
+      end: "15:00"
+  sunday:
+    - start: "10:00"
+      end: "14:00"

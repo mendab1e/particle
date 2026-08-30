@@ -1,0 +1,619 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
+  <meta name="referrer" content="no-referrer">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <title>Particle — Availability calendar</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --background: #f3f6fb;
+      --surface: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: #dbe2ea;
+      --accent: #0284c7;
+      --accent-start: #7dd3fc;
+      --accent-end: #fef08a;
+      --accent-gradient: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+      --accent-glow: rgb(14 165 233 / 0.13);
+      --slot-background: #eff6ff;
+      --slot-border: #bfdbfe;
+      --slot-text: #075985;
+      --today-label-background: #e0f2fe;
+      --today-label-text: #075985;
+      --empty: #526175;
+      --shadow: 0 1px 2px rgb(15 23 42 / 0.04), 0 8px 24px rgb(15 23 42 / 0.04);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at 8% 0%, var(--accent-glow), transparent 28rem), var(--background);
+      color: var(--text);
+      line-height: 1.45;
+    }
+
+    main {
+      width: min(100% - 2rem, 68rem);
+      margin: 0 auto;
+      padding: 3.5rem 0 2rem;
+    }
+
+    header { margin-bottom: 2rem; }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: clamp(0.65rem, 2vw, 0.95rem);
+    }
+
+    .brand-mark {
+      width: clamp(2.7rem, 8vw, 4rem);
+      height: clamp(2.7rem, 8vw, 4rem);
+      flex: 0 0 auto;
+      overflow: visible;
+    }
+
+    .brand-mark-shell {
+      fill: var(--surface);
+      stroke: var(--text);
+      stroke-width: 2.5;
+    }
+
+    .brand-mark-divider,
+    .brand-mark-binding {
+      fill: none;
+      stroke: var(--text);
+      stroke-linecap: round;
+      stroke-width: 2.5;
+    }
+
+    .brand-mark-cell,
+    .brand-mark-particle { fill: var(--accent); }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 7vw, 3.6rem);
+      font-weight: 720;
+      letter-spacing: -0.045em;
+      line-height: 1;
+    }
+
+    h1::after {
+      content: ".";
+      color: var(--accent);
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    .intro {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.12rem;
+      max-width: 38rem;
+      margin: 0.85rem 0 0;
+    }
+
+    .subtitle-name {
+      color: var(--text);
+      font-size: 1.12rem;
+      font-weight: 760;
+      letter-spacing: -0.02em;
+    }
+
+    .calendar-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.25rem 0.45rem;
+      margin: 0.55rem 0 0;
+      color: var(--muted);
+      font-size: 0.86rem;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .week + .week { margin-top: 0.65rem; }
+
+    .weekday-header {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 0.65rem;
+      margin-bottom: 0.55rem;
+    }
+
+    .weekday-header span {
+      padding: 0 1rem;
+      color: var(--muted);
+      font-size: 0.7rem;
+      font-weight: 650;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .days {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 0.65rem;
+    }
+
+    .day {
+      min-height: 10.5rem;
+      padding: 1rem;
+      border: 1px solid var(--border);
+      border-radius: 0.85rem;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+
+    .day.placeholder { visibility: hidden; }
+    .day.empty { color: var(--empty); }
+
+    .day.today {
+      border-color: transparent;
+      background: linear-gradient(var(--surface), var(--surface)) padding-box,
+        var(--accent-gradient) border-box;
+      box-shadow: 0 10px 24px var(--accent-glow);
+    }
+
+    .date {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      margin: 0 0 0.85rem;
+      font-weight: 690;
+      line-height: 1.25;
+    }
+
+    .date-desktop {
+      display: flex;
+      align-items: baseline;
+      gap: 0.32rem;
+    }
+
+    .date-number {
+      font-size: 1.35rem;
+      letter-spacing: -0.03em;
+    }
+
+    .date-month {
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 720;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .date-mobile { display: none; }
+
+    .today-label {
+      display: inline-flex;
+      margin-top: 0.38rem;
+      padding: 0.18rem 0.4rem;
+      border-radius: 999px;
+      background: var(--today-label-background);
+      color: var(--today-label-text);
+      font-size: 0.64rem;
+      font-weight: 760;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .slots {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.42rem;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .slot {
+      padding: 0.42rem 0.55rem;
+      border: 1px solid var(--slot-border);
+      border-radius: 0.45rem;
+      background: var(--slot-background);
+      color: var(--slot-text);
+      font-size: 0.84rem;
+      font-variant-numeric: tabular-nums;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .none {
+      margin: 0;
+      font-size: 0.84rem;
+    }
+
+    .disabled {
+      max-width: 40rem;
+      padding: 1.4rem;
+      border: 1px solid var(--border);
+      border-radius: 0.85rem;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+
+    .disabled h2 { margin: 0 0 0.35rem; font-size: 1.1rem; }
+    .disabled p { margin: 0; color: var(--muted); }
+
+    footer {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      margin-top: 2.25rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .repository-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .repository-link:hover,
+    .repository-link:focus-visible {
+      color: var(--accent);
+      text-decoration: underline;
+    }
+
+    .github-icon {
+      width: 1em;
+      height: 1em;
+      fill: currentColor;
+    }
+
+    @media (max-width: 68rem) {
+      main { padding-top: 2.25rem; }
+      .weekday-header,
+      .days { gap: 0.35rem; }
+      .weekday-header span {
+        padding: 0 0.45rem;
+        font-size: 0.62rem;
+      }
+      .week + .week { margin-top: 0.45rem; }
+      .day {
+        min-height: 8rem;
+        padding: 0.45rem;
+      }
+      .date { margin-bottom: 0.55rem; }
+      .date-number { font-size: 1rem; }
+      .date-month { font-size: 0.6rem; }
+      .slots { gap: 0.3rem; }
+      .slot {
+        padding: 0.3rem;
+        font-size: 0.67rem;
+      }
+      .none { font-size: 0.67rem; }
+    }
+
+    @media (max-width: 46rem) {
+      .weekday-header { display: none; }
+      .week + .week { margin-top: 0.5rem; }
+      .days { grid-template-columns: 1fr; gap: 0.5rem; }
+      .day.placeholder { display: none; }
+      .day {
+        display: grid;
+        grid-template-columns: max-content minmax(0, 1fr);
+        column-gap: 0.5rem;
+        align-items: start;
+        min-height: 0;
+        padding: 0.9rem;
+      }
+      .date { margin: 0; white-space: nowrap; }
+      .date-desktop { display: none; }
+      .date-mobile { display: inline; font-size: 0.88rem; }
+      .slots { justify-content: flex-end; }
+      .slot {
+        padding: 0.42rem 0.55rem;
+        font-size: 0.84rem;
+      }
+      .none { font-size: 0.84rem; }
+    }
+
+    @media (max-width: 26rem) {
+      .day {
+        grid-template-columns: 1fr;
+        row-gap: 0.65rem;
+      }
+      .slots { justify-content: flex-start; }
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --background: #0f172a;
+        --surface: #111827;
+        --text: #f8fafc;
+        --muted: #94a3b8;
+        --border: #334155;
+        --accent: #7dd3fc;
+        --accent-start: #7dd3fc;
+        --accent-end: #fef08a;
+        --accent-glow: rgb(125 211 252 / 0.14);
+        --slot-background: #082f49;
+        --slot-border: #0e7490;
+        --slot-text: #bae6fd;
+        --today-label-background: #0c4a6e;
+        --today-label-text: #bae6fd;
+        --empty: #a3aec0;
+        --shadow: 0 1px 2px rgb(0 0 0 / 0.2), 0 10px 28px rgb(0 0 0 / 0.16);
+      }
+    }
+
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div class="brand">
+        <svg class="brand-mark" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+          <rect class="brand-mark-shell" x="7.5" y="10.5" width="47" height="45" rx="9"/>
+          <path class="brand-mark-divider" d="M8 24.5h46"/>
+          <path class="brand-mark-binding" d="M19.5 6.5v8M42.5 6.5v8"/>
+          <circle class="brand-mark-cell" cx="18" cy="34" r="3"/>
+          <circle class="brand-mark-cell" cx="31" cy="34" r="3"/>
+          <circle class="brand-mark-cell" cx="44" cy="34" r="3"/>
+          <circle class="brand-mark-cell" cx="18" cy="46" r="3"/>
+          <circle class="brand-mark-cell" cx="31" cy="46" r="3"/>
+          <rect class="brand-mark-particle" x="40.5" y="42.5" width="7" height="7" rx="1.5"/>
+        </svg>
+        <h1>Particle</h1>
+      </div>
+      <p class="intro">
+        <span class="subtitle-name">Availability calendar</span>
+      </p>
+              <p class="calendar-meta">
+          <span>Times shown in Europe/Berlin</span>
+        </p>
+          </header>
+
+          <div class="calendar">
+        <div class="weekday-header" aria-hidden="true">
+          <span>mon</span><span>tue</span><span>wed</span><span>thu</span><span>fri</span><span>sat</span><span>sun</span>        </div>
+                  <section class="week" aria-labelledby="week-1-heading">
+            <h2 class="sr-only" id="week-1-heading">Week of 24 August 2026</h2>
+            <div class="days">
+                                                <article class="day empty today"
+                           data-weekday="monday">
+                    <h3 class="date">
+                      <span class="date-desktop" aria-hidden="true">
+                        <span class="date-number">24</span>
+                        <span class="date-month">Aug</span>
+                      </span>
+                      <span class="date-mobile" aria-hidden="true">Mon 24 Aug</span>
+                      <span class="sr-only">Monday, 24 August 2026</span>
+                      <span class="today-label">Today</span>                    </h3>
+                                          <p class="none">No availability</p>
+                                      </article>
+                                                                <article class="day"
+                           data-weekday="tuesday">
+                    <h3 class="date">
+                      <span class="date-desktop" aria-hidden="true">
+                        <span class="date-number">25</span>
+                        <span class="date-month">Aug</span>
+                      </span>
+                      <span class="date-mobile" aria-hidden="true">Tue 25 Aug</span>
+                      <span class="sr-only">Tuesday, 25 August 2026</span>
+                                          </h3>
+                                          <ul class="slots" aria-label="Available times">
+                                                  <li class="slot">10:30–12:00</li>
+                                                  <li class="slot">13:00–13:30</li>
+                                                  <li class="slot">14:30–17:00</li>
+                                              </ul>
+                                      </article>
+                                                                <article class="day empty"
+                           data-weekday="wednesday">
+                    <h3 class="date">
+                      <span class="date-desktop" aria-hidden="true">
+                        <span class="date-number">26</span>
+                        <span class="date-month">Aug</span>
+                      </span>
+                      <span class="date-mobile" aria-hidden="true">Wed 26 Aug</span>
+                      <span class="sr-only">Wednesday, 26 August 2026</span>
+                                          </h3>
+                                          <p class="none">No availability</p>
+                                      </article>
+                                                                <article class="day"
+                           data-weekday="thursday">
+                    <h3 class="date">
+                      <span class="date-desktop" aria-hidden="true">
+                        <span class="date-number">27</span>
+                        <span class="date-month">Aug</span>
+                      </span>
+                      <span class="date-mobile" aria-hidden="true">Thu 27 Aug</span>
+                      <span class="sr-only">Thursday, 27 August 2026</span>
+                                          </h3>
+                                          <ul class="slots" aria-label="Available times">
+                                                  <li class="slot">09:00–11:00</li>
+                                                  <li class="slot">11:30–12:00</li>
+                                                  <li class="slot">13:00–17:00</li>
+                                              </ul>
+                                      </article>
+                                                                <article class="day"
+                           data-weekday="friday">
+                    <h3 class="date">
+                      <span class="date-desktop" aria-hidden="true">
+                        <span class="date-number">28</span>
+                        <span class="date-month">Aug</span>
+                      </span>
+                      <span class="date-mobile" aria-hidden="true">Fri 28 Aug</span>
+                      <span class="sr-only">Friday, 28 August 2026</span>
+                                          </h3>
+                                          <ul class="slots" aria-label="Available times">
+                                                  <li class="slot">09:45–12:00</li>
+                                                  <li class="slot">13:00–16:15</li>
+                                              </ul>
+                                      </article>
+                                                                <article class="day"
+                           data-weekday="saturday">
+                    <h3 class="date">
+                      <span class="date-desktop" aria-hidden="true">
+                        <span class="date-number">29</span>
+                        <span class="date-month">Aug</span>
+                      </span>
+                      <span class="date-mobile" aria-hidden="true">Sat 29 Aug</span>
+                      <span class="sr-only">Saturday, 29 August 2026</span>
+                                          </h3>
+                                          <ul class="slots" aria-label="Available times">
+                                                  <li class="slot">11:00–12:00</li>
+                                                  <li class="slot">13:00–15:00</li>
+                                              </ul>
+                                      </article>
+                                                                <article class="day"
+                           data-weekday="sunday">
+                    <h3 class="date">
+                      <span class="date-desktop" aria-hidden="true">
+                        <span class="date-number">30</span>
+                        <span class="date-month">Aug</span>
+                      </span>
+                      <span class="date-mobile" aria-hidden="true">Sun 30 Aug</span>
+                      <span class="sr-only">Sunday, 30 August 2026</span>
+                                          </h3>
+                                          <ul class="slots" aria-label="Available times">
+                                                  <li class="slot">10:00–14:00</li>
+                                              </ul>
+                                      </article>
+                                          </div>
+          </section>
+                  <section class="week" aria-labelledby="week-2-heading">
+            <h2 class="sr-only" id="week-2-heading">Week of 31 August 2026</h2>
+            <div class="days">
+                                                <article class="day empty"
+                           data-weekday="monday">
+                    <h3 class="date">
+                      <span class="date-desktop" aria-hidden="true">
+                        <span class="date-number">31</span>
+                        <span class="date-month">Aug</span>
+                      </span>
+                      <span class="date-mobile" aria-hidden="true">Mon 31 Aug</span>
+                      <span class="sr-only">Monday, 31 August 2026</span>
+                                          </h3>
+                                          <p class="none">No availability</p>
+                                      </article>
+                                                                <article class="day"
+                           data-weekday="tuesday">
+                    <h3 class="date">
+                      <span class="date-desktop" aria-hidden="true">
+                        <span class="date-number">1</span>
+                        <span class="date-month">Sep</span>
+                      </span>
+                      <span class="date-mobile" aria-hidden="true">Tue 1 Sep</span>
+                      <span class="sr-only">Tuesday, 1 September 2026</span>
+                                          </h3>
+                                          <ul class="slots" aria-label="Available times">
+                                                  <li class="slot">09:00–10:00</li>
+                                                  <li class="slot">16:00–17:00</li>
+                                              </ul>
+                                      </article>
+                                                                <article class="day"
+                           data-weekday="wednesday">
+                    <h3 class="date">
+                      <span class="date-desktop" aria-hidden="true">
+                        <span class="date-number">2</span>
+                        <span class="date-month">Sep</span>
+                      </span>
+                      <span class="date-mobile" aria-hidden="true">Wed 2 Sep</span>
+                      <span class="sr-only">Wednesday, 2 September 2026</span>
+                                          </h3>
+                                          <ul class="slots" aria-label="Available times">
+                                                  <li class="slot">09:00–12:00</li>
+                                                  <li class="slot">13:00–17:00</li>
+                                              </ul>
+                                      </article>
+                                                                <article class="day"
+                           data-weekday="thursday">
+                    <h3 class="date">
+                      <span class="date-desktop" aria-hidden="true">
+                        <span class="date-number">3</span>
+                        <span class="date-month">Sep</span>
+                      </span>
+                      <span class="date-mobile" aria-hidden="true">Thu 3 Sep</span>
+                      <span class="sr-only">Thursday, 3 September 2026</span>
+                                          </h3>
+                                          <ul class="slots" aria-label="Available times">
+                                                  <li class="slot">09:00–12:00</li>
+                                                  <li class="slot">13:00–17:00</li>
+                                              </ul>
+                                      </article>
+                                                                <article class="day"
+                           data-weekday="friday">
+                    <h3 class="date">
+                      <span class="date-desktop" aria-hidden="true">
+                        <span class="date-number">4</span>
+                        <span class="date-month">Sep</span>
+                      </span>
+                      <span class="date-mobile" aria-hidden="true">Fri 4 Sep</span>
+                      <span class="sr-only">Friday, 4 September 2026</span>
+                                          </h3>
+                                          <ul class="slots" aria-label="Available times">
+                                                  <li class="slot">09:00–12:00</li>
+                                                  <li class="slot">13:00–17:00</li>
+                                              </ul>
+                                      </article>
+                                                                <article class="day"
+                           data-weekday="saturday">
+                    <h3 class="date">
+                      <span class="date-desktop" aria-hidden="true">
+                        <span class="date-number">5</span>
+                        <span class="date-month">Sep</span>
+                      </span>
+                      <span class="date-mobile" aria-hidden="true">Sat 5 Sep</span>
+                      <span class="sr-only">Saturday, 5 September 2026</span>
+                                          </h3>
+                                          <ul class="slots" aria-label="Available times">
+                                                  <li class="slot">11:00–15:00</li>
+                                              </ul>
+                                      </article>
+                                                                <article class="day"
+                           data-weekday="sunday">
+                    <h3 class="date">
+                      <span class="date-desktop" aria-hidden="true">
+                        <span class="date-number">6</span>
+                        <span class="date-month">Sep</span>
+                      </span>
+                      <span class="date-mobile" aria-hidden="true">Sun 6 Sep</span>
+                      <span class="sr-only">Sunday, 6 September 2026</span>
+                                          </h3>
+                                          <ul class="slots" aria-label="Available times">
+                                                  <li class="slot">10:00–14:00</li>
+                                              </ul>
+                                      </article>
+                                          </div>
+          </section>
+              </div>
+
+    <footer>
+      <a class="repository-link" href="https://github.com/mendab1e/particle" aria-label="Particle on GitHub">
+        <svg class="github-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+          <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/>
+        </svg>
+        <span>Particle</span>
+      </a>
+      <span aria-hidden="true">·</span>
+      <span>last updated: 24 Aug 2026, 10:00 CEST</span>
+    </footer>
+  </main>
+</body>
+</html>

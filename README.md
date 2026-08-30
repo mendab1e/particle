@@ -11,6 +11,10 @@ There is no application server, database, browser API, booking flow, or Ruby pro
 private ICS feeds → Ruby generator → public/index.html → Nginx → HTTPS
 ```
 
+See the [sample calendar output](docs/sample/index.html) for a generated page showing split availability, busy days, unavailable weekdays, and different weekend hours. It uses only synthetic calendar data.
+
+![Sample calendar output](docs/sample/screenshot.png)
+
 ## Privacy and failure model
 
 Calendar URLs are used only by the generator. The generated HTML contains dates, calculated free intervals, and an update timestamp. It never renders titles, descriptions, locations, attendees, UIDs, calendar names, source URLs, or raw ICS. Logs refer to feeds only as `Calendar 1`, `Calendar 2`, and so on.
@@ -149,6 +153,12 @@ Generate manually:
 
 ```bash
 bundle exec bin/generate
+```
+
+Refresh the deterministic sample page:
+
+```bash
+bundle exec bin/generate-sample
 ```
 
 Useful options:

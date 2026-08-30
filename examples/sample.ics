@@ -1,0 +1,52 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Particle Sample//EN
+BEGIN:VEVENT
+UID:sample-tuesday-morning@example.test
+DTSTART;TZID=Europe/Berlin:20260825T090000
+DTEND;TZID=Europe/Berlin:20260825T103000
+SUMMARY:Sample blocked period
+END:VEVENT
+BEGIN:VEVENT
+UID:sample-tuesday-afternoon@example.test
+DTSTART;TZID=Europe/Berlin:20260825T133000
+DTEND;TZID=Europe/Berlin:20260825T143000
+SUMMARY:Sample blocked period
+END:VEVENT
+BEGIN:VEVENT
+UID:sample-wednesday@example.test
+DTSTART;TZID=Europe/Berlin:20260826T090000
+DTEND;TZID=Europe/Berlin:20260826T170000
+SUMMARY:Sample blocked period
+END:VEVENT
+BEGIN:VEVENT
+UID:sample-thursday@example.test
+DTSTART;TZID=Europe/Berlin:20260827T110000
+DTEND;TZID=Europe/Berlin:20260827T113000
+SUMMARY:Sample blocked period
+END:VEVENT
+BEGIN:VEVENT
+UID:sample-friday-morning@example.test
+DTSTART;TZID=Europe/Berlin:20260828T090000
+DTEND;TZID=Europe/Berlin:20260828T094500
+SUMMARY:Sample blocked period
+END:VEVENT
+BEGIN:VEVENT
+UID:sample-friday-afternoon@example.test
+DTSTART;TZID=Europe/Berlin:20260828T161500
+DTEND;TZID=Europe/Berlin:20260828T170000
+SUMMARY:Sample blocked period
+END:VEVENT
+BEGIN:VEVENT
+UID:sample-saturday@example.test
+DTSTART;TZID=Europe/Berlin:20260829T120000
+DTEND;TZID=Europe/Berlin:20260829T130000
+SUMMARY:Sample blocked period
+END:VEVENT
+BEGIN:VEVENT
+UID:sample-next-tuesday@example.test
+DTSTART;TZID=Europe/Berlin:20260901T100000
+DTEND;TZID=Europe/Berlin:20260901T160000
+SUMMARY:Sample blocked period
+END:VEVENT
+END:VCALENDAR
