@@ -52,7 +52,7 @@ module Availability
       end
 
       def format_time(time)
-        @timezone.to_local(time.utc).strftime('%H:%M')
+        @timezone.to_local(time.getutc).strftime('%H:%M')
       end
 
       def weeks
@@ -68,7 +68,7 @@ module Availability
       end
 
       def updated_at
-        @timezone.to_local(@generated_at.utc).strftime('%-d %b %Y, %H:%M %Z')
+        @timezone.to_local(@generated_at.getutc).strftime('%-d %b %Y, %H:%M %Z')
       end
 
       def period_description

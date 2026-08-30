@@ -20,6 +20,7 @@ RSpec.describe Availability::Application do
     end
     let(:fixture) { File.read(paths.fetch(:fixture)) }
     let(:now) { Time.utc(2026, 8, 26, 7, 17, 0) }
+    let(:output) { StringIO.new }
     let(:enabled) { true }
     let(:calendar_urls) { ['https://calendar.test/private.ics?token=super-secret'] }
     let(:fetcher) { instance_double(Availability::CalendarFetcher, fetch: fixture) }
@@ -28,7 +29,7 @@ RSpec.describe Availability::Application do
         config_path: paths.fetch(:config),
         output_dir: paths.fetch(:output),
         template_path: paths.fetch(:template),
-        output: StringIO.new,
+        output: output,
         clock: -> { now },
         fetcher: fetcher
       )
@@ -124,6 +125,33 @@ RSpec.describe Availability::Application do
       it 'leaves the previous index untouched', :aggregate_failures do
         expect { run_application }.to raise_error(Availability::FetchError)
         expect(File.read(paths.fetch(:index))).to eq('known good')
+      end
+    end
+
+    context 'when a calendar contains a malformed event' do
+      let(:fixture) do
+        <<~ICS
+          BEGIN:VCALENDAR
+          VERSION:2.0
+          PRODID:-//Test//EN
+          BEGIN:VEVENT
+          UID:malformed-private-id
+          SUMMARY:Private malformed event
+          END:VEVENT
+          BEGIN:VEVENT
+          UID:valid-event
+          DTSTART:20260827T120000Z
+          DTEND:20260827T130000Z
+          END:VEVENT
+          END:VCALENDAR
+        ICS
+      end
+
+      it 'logs only the sanitized ignored-event count', :aggregate_failures do
+        run_application
+
+        expect(output.string).to include('Calendar 1 ignored 1 malformed event')
+        expect(output.string).not_to match(/malformed-private-id|Private malformed event/)
       end
     end
   end

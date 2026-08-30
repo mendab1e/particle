@@ -133,5 +133,42 @@ RSpec.describe Availability::Config do
         expect { config }.to raise_error(Availability::ConfigError, /at least one URL/)
       end
     end
+
+    context 'with an unknown top-level key' do
+      let(:attributes) { config_attributes('minimum_slot_minute' => 60) }
+
+      it 'rejects the typo instead of applying a default' do
+        expect { config }.to raise_error(Availability::ConfigError, /unknown key: minimum_slot_minute/)
+      end
+    end
+
+    context 'with an unknown event buffer key' do
+      let(:attributes) do
+        config_attributes('event_buffer' => { 'before_minute' => 30 })
+      end
+
+      it 'rejects the typo instead of applying a zero buffer' do
+        expect { config }.to raise_error(Availability::ConfigError, /event_buffer has unknown key: before_minute/)
+      end
+    end
+
+    context 'when the displayed range exceeds the safety limit' do
+      let(:attributes) { config_attributes('days_to_show' => described_class::MAX_DAYS_TO_SHOW + 1) }
+
+      it 'rejects the range' do
+        expect { config }.to raise_error(Availability::ConfigError, /days_to_show must be at most/)
+      end
+    end
+
+    context 'when the calendar count exceeds the safety limit' do
+      let(:attributes) do
+        urls = Array.new(described_class::MAX_CALENDAR_URLS + 1) { |index| "https://calendar#{index}.example/feed.ics" }
+        config_attributes('calendar_urls' => urls)
+      end
+
+      it 'rejects the calendar list' do
+        expect { config }.to raise_error(Availability::ConfigError, /calendar_urls must contain at most/)
+      end
+    end
   end
 end

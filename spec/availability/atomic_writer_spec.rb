@@ -28,5 +28,55 @@ RSpec.describe Availability::AtomicWriter do
         expect(Dir.children(directory)).to be_empty
       end
     end
+
+    context 'when publishing the index fails' do
+      subject(:write_files) do
+        described_class.write_all(
+          directory,
+          'robots.txt' => 'new robots',
+          'index.html' => 'new index'
+        )
+      end
+
+      before do
+        File.write(File.join(directory, 'index.html'), 'known good')
+        allow(File).to receive(:rename).and_wrap_original do |method, source, destination|
+          raise Errno::EACCES, destination if File.basename(destination) == 'index.html'
+
+          method.call(source, destination)
+        end
+      end
+
+      it 'retains the known-good index and removes temporary files', :aggregate_failures do
+        expect { write_files }.to raise_error(Errno::EACCES)
+        expect(File.read(File.join(directory, 'index.html'))).to eq('known good')
+        expect(Dir.children(directory).grep(/\.tmp\z/)).to be_empty
+      end
+    end
+
+    context 'when publishing an earlier asset fails' do
+      subject(:write_files) do
+        described_class.write_all(
+          directory,
+          'robots.txt' => 'new robots',
+          'index.html' => 'new index'
+        )
+      end
+
+      before do
+        File.write(File.join(directory, 'index.html'), 'known good')
+        allow(File).to receive(:rename).and_wrap_original do |method, source, destination|
+          raise Errno::EACCES, destination if File.basename(destination) == 'robots.txt'
+
+          method.call(source, destination)
+        end
+      end
+
+      it 'does not attempt to replace the index', :aggregate_failures do
+        expect { write_files }.to raise_error(Errno::EACCES)
+        expect(File.read(File.join(directory, 'index.html'))).to eq('known good')
+        expect(Dir.children(directory).grep(/\.tmp\z/)).to be_empty
+      end
+    end
   end
 end

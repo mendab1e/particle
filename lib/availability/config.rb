@@ -6,13 +6,22 @@ require 'yaml'
 require 'tzinfo'
 
 require_relative 'calendar_url'
+require_relative 'config_value_parser'
 
 module Availability
   # Loads, normalizes, and validates generator configuration.
   class Config
+    include ConfigValueParser
+
+    TOP_LEVEL_KEYS = %w[
+      enabled timezone calendar_urls days_to_show minimum_slot_minutes event_buffer availability
+    ].freeze
+    EVENT_BUFFER_KEYS = %w[before_minutes after_minutes].freeze
     WEEKDAYS = %w[sunday monday tuesday wednesday thursday friday saturday].freeze
     ENV_REFERENCE = /\A\$\{([A-Z][A-Z0-9_]*)\}\z/
     TIME_FORMAT = /\A(?:[01]\d|2[0-3]):[0-5]\d\z/
+    MAX_DAYS_TO_SHOW = 366
+    MAX_CALENDAR_URLS = 20
 
     attr_reader :enabled, :timezone, :calendar_urls, :days_to_show,
                 :minimum_slot_minutes, :buffer_before_minutes, :buffer_after_minutes
@@ -31,9 +40,10 @@ module Availability
     def initialize(raw, env: ENV)
       @raw = stringify_keys(raw)
       @env = env
+      validate_known_keys(@raw, TOP_LEVEL_KEYS, 'configuration')
       @enabled = boolean('enabled', default: true)
       @timezone = parse_timezone
-      @days_to_show = positive_integer('days_to_show', default: 28)
+      @days_to_show = bounded_positive_integer('days_to_show', default: 28, maximum: MAX_DAYS_TO_SHOW)
       @minimum_slot_minutes = nonnegative_integer('minimum_slot_minutes', default: 0)
       parse_buffers
       @availability = parse_availability
@@ -57,27 +67,6 @@ module Availability
       value
     end
 
-    def boolean(key, default:)
-      value = @raw.fetch(key, default)
-      return value if [true, false].include?(value)
-
-      raise ConfigError, "#{key} must be true or false"
-    end
-
-    def positive_integer(key, default:)
-      value = @raw.fetch(key, default)
-      return value if value.is_a?(Integer) && value.positive?
-
-      raise ConfigError, "#{key} must be a positive integer"
-    end
-
-    def nonnegative_integer(key, default:)
-      value = @raw.fetch(key, default)
-      return value if value.is_a?(Integer) && value >= 0
-
-      raise ConfigError, "#{key} must be a non-negative integer"
-    end
-
     def parse_timezone
       name = @raw.fetch('timezone', 'Europe/Berlin')
       raise ConfigError, 'timezone must be a string' unless name.is_a?(String)
@@ -91,15 +80,9 @@ module Availability
       buffer = @raw.fetch('event_buffer', {})
       raise ConfigError, 'event_buffer must be a mapping' unless buffer.is_a?(Hash)
 
+      validate_known_keys(buffer, EVENT_BUFFER_KEYS, 'event_buffer')
       @buffer_before_minutes = nested_nonnegative_integer(buffer, 'before_minutes', 0, 'event_buffer.before_minutes')
       @buffer_after_minutes = nested_nonnegative_integer(buffer, 'after_minutes', 0, 'event_buffer.after_minutes')
-    end
-
-    def nested_nonnegative_integer(hash, key, default, label)
-      value = hash.fetch(key, default)
-      return value if value.is_a?(Integer) && value >= 0
-
-      raise ConfigError, "#{label} must be a non-negative integer"
     end
 
     def parse_calendar_urls
@@ -108,6 +91,9 @@ module Availability
 
       urls = @raw.fetch('calendar_urls', [])
       raise ConfigError, 'calendar_urls must be an array' unless urls.is_a?(Array)
+      if urls.length > MAX_CALENDAR_URLS
+        raise ConfigError, "calendar_urls must contain at most #{MAX_CALENDAR_URLS} URLs"
+      end
 
       resolved = urls.each_with_index.map { |value, index| parse_calendar_url(value, index) }
       raise ConfigError, 'calendar_urls must contain at least one URL when enabled' if resolved.empty?

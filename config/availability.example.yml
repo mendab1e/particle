@@ -6,6 +6,7 @@ calendar_urls:
   - "${CALENDAR_MAIN_URL}"
   - "${CALENDAR_EXTRA_URL}"
 
+# Safety limits: at most 20 calendar URLs and 366 displayed days.
 days_to_show: 28
 minimum_slot_minutes: 60
 

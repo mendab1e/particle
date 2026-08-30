@@ -60,14 +60,18 @@ bin/generate
 
 ### Configuration and input
 
-- `lib/availability/config.rb`: safely loads YAML; validates timezone, URLs, day counts, buffers, weekday definitions, time syntax, window ordering, and environment placeholders. Weekday definitions replace `default`; they do not merge with it.
+- `lib/availability/config.rb`: safely loads YAML; validates strict keys, timezone, URLs, bounded day/calendar counts, buffers, weekday definitions, time syntax, window ordering, and environment placeholders. Weekday definitions replace `default`; they do not merge with it.
+- `lib/availability/config_value_parser.rb`: contains reusable scalar and strict-key configuration validation helpers.
 - `lib/availability/calendar_url.rb`: converts `webcal:` to `https:` without exposing the original value.
 - `lib/availability/calendar_fetcher.rb`: uses `Net::HTTP`, follows bounded redirects, applies connection/read timeouts, streams successful bodies under `MAX_BYTES`, and sanitizes failures.
 
 ### Calendar domain
 
-- `lib/availability/calendar_parser.rb`: uses `icalendar` plus `icalendar-recurrence`/`ice_cube`; expands only the relevant range; handles UTC, named-zone, floating, all-day, multi-day, recurring, exclusion, cancellation, and detached recurrence events. Malformed individual events are ignored without exposing their contents.
-- `lib/availability/busy_period.rb`: defines UTC-backed `BusyPeriod`, `Slot`, and `DayAvailability` value objects.
+- `lib/availability/tolerant_icalendar_parser.rb`: isolates malformed properties and lines to their containing event.
+- `lib/availability/event_timezone_validator.rb`: rejects unresolved source `TZID` values while accepting mapped IANA/Windows zones and usable `VTIMEZONE` definitions.
+- `lib/availability/recurrence_expander.rb`: chunks dense recurrence expansion and enforces per-event and per-calendar occurrence limits.
+- `lib/availability/calendar_parser.rb`: silences dependency diagnostics and uses the parser helpers plus `icalendar-recurrence`/`ice_cube`; handles UTC, named-zone, floating, all-day, multi-day, recurring, exclusion, cancellation, and detached recurrence events. Malformed individual events are ignored and reported only as sanitized counts.
+- `lib/availability/busy_period.rb`: defines immutable UTC-backed `BusyPeriod`, `Slot`, and `DayAvailability` value objects.
 - `lib/availability/availability_calculator.rb`: applies buffers, builds per-day local boundaries, clips and merges busy periods, subtracts them from configured windows, and filters short slots.
 
 ### Output
@@ -118,7 +122,7 @@ bundle exec rake
 - Use `:aggregate_failures` only when multiple assertions describe one coherent artifact or outcome.
 - Do not expose real feed data in tests. `spec/fixtures/sample.ics` is intentionally synthetic and includes fake sensitive metadata so privacy tests can assert it is absent from output.
 - Every bug fix should add a regression example that fails before the fix.
-- Important coverage areas: interval subtraction/merging, multiple calendars, boundaries, midnight/all-day events, weekday replacements, unavailable days, split windows, minimum duration, buffers, recurrence/exclusions/overrides, UTC/source/floating zones, DST, atomic failure cleanup, streaming limits, disabled mode, and privacy scans.
+- Important coverage areas: interval subtraction/merging, multiple calendars, boundaries, midnight/all-day events, weekday replacements, unavailable days, split windows, minimum duration, buffers, recurrence/exclusions/overrides and limits, UTC/source/floating/custom/unresolved zones, tolerant event parsing, sanitized diagnostics, DST, atomic preparation/publish failure cleanup, streaming limits, disabled mode, and privacy scans.
 
 ## Style and change workflow
 

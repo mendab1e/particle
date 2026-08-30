@@ -71,9 +71,17 @@ module Availability
         label = "Calendar #{index + 1}"
         body = @fetcher.fetch(url, label: label)
         periods = parser.parse(body, range_start: range_start, range_end: range_end, label: label)
+        log_ignored_events(config, now, label, parser.ignored_event_count)
         log(config, now, "#{label} fetched and parsed successfully")
         periods
       end
+    end
+
+    def log_ignored_events(config, now, label, count)
+      return if count.zero?
+
+      noun = count == 1 ? 'event' : 'events'
+      log(config, now, "#{label} ignored #{count} malformed #{noun}")
     end
 
     def log(config, moment, message)

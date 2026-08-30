@@ -3,18 +3,30 @@
 require 'active_support/time'
 require 'icalendar'
 require 'icalendar/recurrence'
+require 'logger'
+
+require_relative 'event_timezone_validator'
+require_relative 'recurrence_expander'
+require_relative 'tolerant_icalendar_parser'
 
 module Availability
   # Parses ICS events and expands occurrences into privacy-safe busy periods.
   class CalendarParser
+    MAX_EVENTS_PER_CALENDAR = 10_000
+    NULL_LOGGER = Logger.new(IO::NULL)
+
+    attr_reader :ignored_event_count
+
     def initialize(timezone:)
       @timezone = timezone
+      @ignored_event_count = 0
     end
 
     def parse(ics, range_start:, range_end:, label: 'Calendar')
-      events = parse_events(ics, label).select { |event| valid_event?(event) }
-      override_keys = recurrence_override_keys(events)
-      busy_periods(events, override_keys, range_start, range_end)
+      reset_diagnostics
+      with_silenced_dependency_logging { parse_periods(ics, range_start, range_end, label) }
+    rescue RecurrenceExpander::LimitError
+      raise ParseError, "#{label} exceeded the safe recurrence expansion limit"
     rescue ParseError
       raise
     rescue StandardError => e
@@ -23,14 +35,39 @@ module Availability
 
     private
 
+    def parse_periods(ics, range_start, range_end, label)
+      events = parse_events(ics, label)
+      valid_events = events.select { |event| valid_event?(event) }
+      @ignored_event_count += events.length - valid_events.length
+      override_keys = recurrence_override_keys(valid_events)
+      busy_periods(valid_events, override_keys, range_start, range_end)
+    end
+
     def parse_events(ics, label)
-      calendars = Icalendar::Calendar.parse(ics)
+      calendars = parse_calendars(ics)
       raise ParseError, "#{label} did not contain a calendar" if calendars.empty?
 
-      calendars.flat_map(&:events)
+      events = calendars.flat_map(&:events)
+      raise ParseError, "#{label} exceeded the safe event limit" if events.length > MAX_EVENTS_PER_CALENDAR
+
+      events
+    end
+
+    def parse_calendars(ics)
+      parse_with_tolerance(ics)
+    rescue ArgumentError
+      parse_with_tolerance(Icalendar::Parser.clean_bad_wrapping(ics))
+    end
+
+    def parse_with_tolerance(ics)
+      TolerantIcalendarParser.new(ics).tap do |parser|
+        parser.component_class = Icalendar::Calendar
+      end.parse
     end
 
     def valid_event?(event)
+      raise InvalidEventError, 'event contains an invalid property' if TolerantIcalendarParser.invalid_event?(event)
+
       validate_event!(event)
       value_to_utc(event.recurrence_id) if event.recurrence_id
       true
@@ -39,9 +76,11 @@ module Availability
     end
 
     def validate_event!(event)
+      EventTimezoneValidator.validate!(event)
       return if cancelled?(event)
 
       raise InvalidEventError, 'event is missing DTSTART' unless event.dtstart
+
       return unless event.dtend || event.duration
 
       starts_at = event.schedule.start_time
@@ -62,16 +101,17 @@ module Availability
         period = occurrence_to_period(event, occurrence)
         period if period&.intersects?(range_start, range_end)
       end
+    rescue RecurrenceExpander::LimitError
+      raise
     rescue StandardError
+      @ignored_event_count += 1
       []
     end
 
     def occurrences(event, range_start, range_end)
       return [] unless event.dtstart
 
-      # `spans: true` includes an occurrence that begins before the range and
-      # continues into it. Expansion remains bounded to the required output.
-      event.occurrences_between(range_start, range_end, spans: true)
+      @recurrence_expander.expand(event, range_start: range_start, range_end: range_end)
     end
 
     def occurrence_to_period(event, occurrence)
@@ -140,6 +180,19 @@ module Availability
 
     def value_to_utc(value)
       Icalendar::Recurrence::TimeUtil.to_time(value).to_time.utc
+    end
+
+    def reset_diagnostics
+      @ignored_event_count = 0
+      @recurrence_expander = RecurrenceExpander.new
+    end
+
+    def with_silenced_dependency_logging
+      previous_logger = Icalendar.logger
+      Icalendar.logger = NULL_LOGGER
+      yield
+    ensure
+      Icalendar.logger = previous_logger
     end
   end
 end

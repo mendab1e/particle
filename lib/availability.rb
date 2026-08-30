@@ -2,9 +2,13 @@
 
 require_relative 'availability/errors'
 require_relative 'availability/calendar_url'
+require_relative 'availability/config_value_parser'
 require_relative 'availability/config'
 require_relative 'availability/calendar_fetcher'
 require_relative 'availability/busy_period'
+require_relative 'availability/tolerant_icalendar_parser'
+require_relative 'availability/event_timezone_validator'
+require_relative 'availability/recurrence_expander'
 require_relative 'availability/calendar_parser'
 require_relative 'availability/availability_calculator'
 require_relative 'availability/renderer'
