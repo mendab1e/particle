@@ -23,44 +23,35 @@ All configured feeds must download and be parseable as calendars. If any feed fa
 
 The page includes `noindex, nofollow, noarchive, nosnippet, noimageindex` plus a no-referrer policy, and `public/robots.txt` disallows all crawling. The Nginx example reinforces those directives with response headers, disables shared/browser caching, and serves the robots policy from the required origin-wide `/robots.txt` location. These are requests to well-behaved crawlers, **not authentication or access control**. A long random path reduces accidental discovery but does not prevent a recipient from sharing the URL. Enable HTTP authentication in Nginx if non-discoverability must be enforced against arbitrary scrapers.
 
-## Requirements and installation
+## Quick start
 
-- Ruby 3.4 or newer
-- A normal Linux VPS for production
-
-Install the gem to add the `particle` command:
+Particle requires Ruby 3.4 or newer. Install the gem and create a deployment directory:
 
 ```bash
 gem install particle-calendar
-particle --help
-```
-
-The core libraries are:
-
-- [`icalendar`](https://github.com/icalendar/icalendar) to parse RFC 5545 data;
-- [`icalendar-recurrence`](https://github.com/icalendar/icalendar-recurrence), backed by `ice_cube`, to expand only occurrences intersecting the output range;
-- `ActiveSupport::TimeWithZone` and `tzinfo` to retain named time zones and wall-clock recurrence times across DST;
-- standard-library `Net::HTTP`, ERB, YAML, and filesystem primitives;
-- RSpec and WebMock for tests.
-
-`icalendar` parses recurrence properties but does not itself produce occurrence instances. `icalendar-recurrence` supplies date-bounded `occurrences_between` expansion, including common `RRULE`, `RDATE`, and `EXDATE` behavior. Particle additionally chunks dense secondly/minutely rules and applies event/calendar occurrence-count limits before retaining expanded results. The generator also handles exact detached `RECURRENCE-ID` overrides and cancellations so a moved instance replaces its original occurrence.
-
-## Configuration
-
-Create a starter configuration, an Nginx server-block sample, and the static output directory:
-
-```bash
+mkdir particle
+cd particle
 particle setup
 ```
 
-By default this writes `particle.yml` with mode `0600`, `particle.nginx.conf`, `public/`, and `log/` in the current directory. It generates a long random URL path for the Nginx sample and refuses to replace either setup file if it already exists.
+Edit `particle.yml` to add your calendar URLs and availability hours, then generate the page:
+
+```bash
+particle generate
+```
+
+The generated page is `public/index.html`. For a server deployment, install the generated `particle.nginx.conf` after reviewing it and configuring TLS. See [VPS deployment](#vps-deployment) for permissions, Nginx, and scheduled regeneration.
+
+`particle setup` also creates `public/`, `log/`, and a long random URL path. It protects `particle.yml` with mode `0600` and refuses to replace existing setup files.
+
+## Configuration
 
 Customize every destination when needed:
 
 ```bash
 particle setup \
-  --config /opt/particle/availability.yml \
-  --output /var/www/particle \
+  --config /opt/particle/particle.yml \
+  --output /opt/particle/public \
   --nginx /opt/particle/particle.nginx.conf \
   --server-name calendar.example.com \
   --url-path /replace-with-a-long-random-value/
@@ -205,6 +196,16 @@ bundle exec bin/generate
 bundle exec bin/generate --config /path/to/config.yml --output /path/to/public
 ```
 
+The core libraries are:
+
+- [`icalendar`](https://github.com/icalendar/icalendar) to parse RFC 5545 data;
+- [`icalendar-recurrence`](https://github.com/icalendar/icalendar-recurrence), backed by `ice_cube`, to expand only occurrences intersecting the output range;
+- `ActiveSupport::TimeWithZone` and `tzinfo` to retain named time zones and wall-clock recurrence times across DST;
+- standard-library `Net::HTTP`, ERB, YAML, and filesystem primitives;
+- RSpec and WebMock for tests.
+
+`icalendar` parses recurrence properties but does not itself produce occurrence instances. `icalendar-recurrence` supplies date-bounded `occurrences_between` expansion, including common `RRULE`, `RDATE`, and `EXDATE` behavior. Particle additionally chunks dense secondly/minutely rules and applies event/calendar occurrence-count limits before retaining expanded results. The generator also handles exact detached `RECURRENCE-ID` overrides and cancellations so a moved instance replaces its original occurrence.
+
 Refresh the deterministic sample page with synthetic data:
 
 ```bash
@@ -239,10 +240,9 @@ Nginx
 HTTPS
 ```
 
-Create a dedicated account or deploy as an unprivileged service user, install Ruby 3.4, and install the gem. Create `/opt/particle` as a directory owned by that user, then initialize the deployment:
+Install Ruby 3.4 or newer and the gem as shown in the [quick start](#quick-start). Then create `/opt/particle` as a directory owned by a dedicated account or another unprivileged service user and initialize the deployment there:
 
 ```bash
-gem install particle-calendar
 cd /opt/particle
 particle setup --server-name calendar.example.com
 # Edit particle.yml and replace the example calendar placeholders.
@@ -305,7 +305,6 @@ The repository includes a [`deploy/availability.logrotate`](deploy/availability.
 - **Calendar exceeded a safe limit:** reduce an unusually large displayed range or inspect the feed privately for excessive event counts or dense recurrence rules. The generator intentionally fails before publishing rather than risking resource exhaustion.
 - **Old update timestamp:** inspect cron logs. A stale page usually means a later run failed safely.
 - **Permission denied while publishing:** the generator needs write permission on `public/`; Nginx needs read permission only.
-- **Nginx reports that `index.htmlindex.html` is not a directory:** replace the installed page locations with the current `particle.nginx.conf` example, then validate and reload Nginx. Older examples pointed a trailing-slash location directly at the file, causing Nginx's index module to append `index.html` twice.
 
 ## Known limits
 
