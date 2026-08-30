@@ -11,7 +11,7 @@ There is no application server, database, browser API, booking flow, or Ruby pro
 private ICS feeds → Ruby generator → public/index.html → Nginx → HTTPS
 ```
 
-See the [sample calendar output](docs/sample/index.html) for a generated page showing split availability, busy days, unavailable weekdays, and different weekend hours. It uses only synthetic calendar data.
+See the [live sample calendar](https://mendab1e.github.io/particle/sample/) for a generated page showing split availability, busy days, unavailable weekdays, and different weekend hours. It uses only synthetic calendar data. The [HTML source](docs/sample/index.html) is also available in the repository.
 
 ![Sample calendar output](docs/sample/screenshot.png)
 
